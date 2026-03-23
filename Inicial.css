@@ -7,26 +7,42 @@ body {
     /* Remove margens e preenchimentos padrão */
     margin: 0;
     padding: 0;
-    /* Cor de fundo escura */
-    background-color: #060a1e;
-    /* Cor do texto clara */
-    color: #FBE4D8;
+    /* Fundo escuro moderno */
+    background-color: #0a0a0a;
+    /* Texto claro para contraste */
+    color: #e0e0e0;
 }
 
 /* Estilos para o cabeçalho */
 header {
-    /* Cor de fundo roxa escura */
-    background-color: #2B124C;
-    /* Cor do texto clara */
-    color: #FBE4D8;
+    /* Fundo escuro com tom azul */
+    background-color: #1a1a2e;
+    /* Texto claro */
+    color: #e0e0e0;
     /* Preenchimento interno */
-    padding: 2rem;
+    padding: 3rem 2rem 2rem 2rem;
     /* Alinhamento centralizado */
-    text-align: center;
-    /* Sombra para profundidade */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Sombra leve para profundidade */
     box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     /* Margem esquerda para compensar a sidebar */
     margin-left: 220px;
+    /* Bordas arredondadas suaves */
+    border-radius: 0 0 12px 12px;
+    /* Posição relativa para logo */
+    position: relative;
+}
+
+/* Logo no canto superior direito */
+.logo {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 120px;
+    height: auto;
+    border-radius: 8px;
 }
 
 /* Ajuste do cabeçalho quando a sidebar está colapsada */
@@ -39,10 +55,15 @@ body.sidebar-collapsed header {
 header h1 {
     /* Remove margem padrão */
     margin: 0;
-    /* Tamanho da fonte grande */
-    font-size: 2.5rem;
+    /* Tamanho da fonte ainda menor */
+    font-size: 1.5rem;
+    /* Mover mais para a esquerda */
+    margin-left: -4rem;
 }
-
+/* Ícone para o título */
+header h1::before {
+    content: "🎯 ";
+}
 /* Estilos para a sidebar */
 .sidebar {
     /* Posicionamento fixo */
@@ -54,13 +75,13 @@ header h1 {
     width: 220px;
     /* Altura total */
     height: 100%;
-    /* Cor de fundo roxa escura */
-    background-color: #2B124C;
-    /* Borda direita amarela */
-    border-right: 1px solid #ffdf99;
+    /* Fundo escuro azul */
+    background-color: #1a1a2e;
+    /* Borda direita sutil */
+    border-right: 1px solid #333;
     /* Preenchimento superior */
     padding-top: 3rem;
-    /* Sombra para profundidade */
+    /* Sombra leve */
     box-shadow: 2px 0 12px rgba(0,0,0,0.4);
     /* Transição suave para largura */
     transition: width 0.25s ease;
@@ -72,6 +93,11 @@ header h1 {
 .sidebar.collapsed {
     /* Largura reduzida */
     width: 64px;
+}
+
+/* Esconder texto quando sidebar colapsada */
+.sidebar.collapsed nav a span {
+    display: none;
 }
 
 /* Estilos para o botão de toggle da sidebar */
@@ -88,16 +114,24 @@ header h1 {
     border-radius: 50%;
     /* Sem borda */
     border: none;
-    /* Cor de fundo marrom */
-    background-color: #856e4f;
-    /* Cor do texto clara */
-    color: #FBE4D8;
+    /* Fundo com cor neon rosa */
+    background-color: #ff00ff;
+    /* Texto claro */
+    color: #e0e0e0;
     /* Tamanho da fonte */
     font-size: 1.2rem;
     /* Cursor de ponteiro */
     cursor: pointer;
-    /* Sombra vermelha */
-    box-shadow: 0 0 8px rgba(255, 0, 0, 0.4);
+    /* Sombra leve */
+    box-shadow: 0 0 8px rgba(255, 0, 255, 0.4);
+    /* Transição para hover */
+    transition: box-shadow 0.2s ease;
+}
+
+/* Hover para botão toggle */
+.sidebar-toggle:hover {
+    /* Brilho aumentado */
+    box-shadow: 0 0 12px rgba(255, 0, 255, 0.8);
 }
 
 /* Ajuste do main e header quando sidebar colapsada */
@@ -125,8 +159,8 @@ header h1 {
 
 /* Estilos para links na navegação */
 nav a {
-    /* Cor amarela */
-    color: #ffdf99;
+    /* Texto claro */
+    color: #e0e0e0;
     /* Remove sublinhado */
     text-decoration: none;
     /* Negrito */
@@ -138,22 +172,50 @@ nav a {
     /* Preenchimento interno */
     padding: 0.75rem 1rem;
     /* Transição suave para fundo */
-    transition: background 0.2s ease;
+    transition: background 0.2s ease, color 0.2s ease;
+    /* Centralizar conteúdo */
+    text-align: center;
+}
+
+/* Ícones para links */
+nav a[href="#adicionar-meta"]::before {
+    content: "➕ ";
+}
+
+nav a[href="#minhas-metas"]::before {
+    content: "📋 ";
+}
+
+nav a[href="#progresso"]::before {
+    content: "📈 ";
+}
+
+nav a[href="#dashboard"]::before {
+    content: "📊 ";
 }
 
 /* Hover para links na navegação */
 nav a:hover {
     /* Remove sublinhado */
     text-decoration: none;
-    /* Cor do texto clara */
-    color: #FBE4D8;
-    /* Cor de fundo roxa */
-    background-color: #522B5B;
+    /* Texto claro */
+    color: #ffffff;
+    /* Fundo com destaque neon */
+    background-color: #8a2be2;
     /* Bordas arredondadas */
     border-radius: 6px;
 }
 
-/* Estilos para o conteúdo principal */
+/* Classe para item ativo na sidebar */
+nav a.active {
+    /* Fundo vibrante roxo */
+    background-color: #8a2be2;
+    /* Texto branco */
+    color: #ffffff;
+    /* Bordas arredondadas */
+    border-radius: 6px;
+}
+
 /* Estilos para o conteúdo principal */
 main {
     /* Largura máxima */
@@ -171,90 +233,131 @@ body.sidebar-collapsed main {
 }
 
 section {
-    background-color: #190019;
+    /* Fundo levemente mais claro que o principal */
+    background-color: #2a2a3e;
+    /* Preenchimento interno */
     padding: 2rem;
+    /* Bordas arredondadas */
     border-radius: 12px;
+    /* Sombra leve para profundidade */
     box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-    border: 1px solid #2B124C;
+    /* Borda sutil */
+    border: 1px solid #333;
 }
 
 section h2 {
-    color: #FBE4D8;
-    border-bottom: 3px solid #854F6C;
+    /* Texto claro */
+    color: #e0e0e0;
+    /* Borda inferior com cor destaque */
+    border-bottom: 3px solid #ff00ff;
+    /* Preenchimento inferior */
     padding-bottom: 0.5rem;
+    /* Margem inferior */
     margin-bottom: 1.5rem;
+    /* Tamanho da fonte */
     font-size: 1.8rem;
 }
 
-form {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+/* Filtros */
+.filters {
+    display: flex;
+    flex-wrap: wrap;
     gap: 1rem;
+    margin-bottom: 1rem;
+    align-items: center;
+}
+
+.filters label {
+    font-weight: bold;
+    color: #b0b0b0;
+    margin-right: 0.5rem;
+}
+
+.filters select {
+    padding: 0.5rem;
+    border: 1px solid #555;
+    border-radius: 8px;
+    background-color: #1a1a2e;
+    color: #e0e0e0;
+    font-size: 1rem;
+}
+
+.filters select:focus {
+    outline: none;
+    border-color: #ff00ff;
+    box-shadow: 0 0 8px rgba(255, 0, 255, 0.3);
+}
+
+.filters input[type="text"] {
+    padding: 0.5rem;
+    border: 1px solid #555;
+    border-radius: 8px;
+    background-color: #1a1a2e;
+    color: #e0e0e0;
+    font-size: 1rem;
+}
+
+.filters input[type="text"]:focus {
+    outline: none;
+    border-color: #ff00ff;
+    box-shadow: 0 0 8px rgba(255, 0, 255, 0.3);
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+form > * {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 form label {
+    min-width: 150px;
     font-weight: bold;
-    color: #DFB6B2;
+    color: #b0b0b0;
+    font-size: 0.9rem;
 }
 
-/* Estilos para inputs e textareas em formulários */
-form input, form textarea {
-    /* Preenchimento interno */
-    padding: 0.75rem;
-    /* Borda roxa */
-    border: 1px solid #522B5B;
-    /* Bordas arredondadas */
-    border-radius: 8px;
-    /* Cor de fundo roxa escura */
-    background-color: #2B124C;
-    /* Cor do texto clara */
-    color: #FBE4D8;
-    /* Tamanho da fonte */
-    font-size: 1rem;
+form input, form select, form textarea {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid #555;
+    border-radius: 6px;
+    background-color: #1a1a2e;
+    color: #e0e0e0;
+    font-size: 0.9rem;
 }
 
-/* Foco para inputs e textareas */
-form input:focus, form textarea:focus {
-    /* Remove outline padrão */
-    outline: none;
-    /* Borda rosa */
-    border-color: #854F6C;
-}
-
-/* Textarea ocupa duas colunas */
 form textarea {
-    /* Ocupa duas colunas no grid */
-    grid-column: span 2;
+    resize: vertical;
+    min-height: 60px;
 }
 
-/* Botão do formulário */
 form button {
-    /* Ocupa duas colunas */
-    grid-column: span 2;
-    /* Margem superior */
-    margin-top: 1rem;
-    /* Preenchimento interno */
-    padding: 0.75rem;
-    /* Cor de fundo roxa */
-    background-color: #522B5B;
-    /* Cor do texto clara */
-    color: #FBE4D8;
-    /* Sem borda */
+    align-self: flex-start;
+    padding: 0.5rem 1rem;
+    background-color: #8a2be2;
+    color: #e0e0e0;
     border: none;
-    /* Bordas arredondadas */
-    border-radius: 8px;
-    /* Cursor de ponteiro */
+    border-radius: 6px;
     cursor: pointer;
-    /* Tamanho da fonte */
-    font-size: 1rem;
-    /* Negrito */
+    font-size: 0.9rem;
     font-weight: bold;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 /* Hover para botão do formulário */
 form button:hover {
-    /* Cor de fundo rosa */
-    background-color: #854F6C;
+    /* Fundo neon rosa */
+    background-color: #ff00ff;
+    /* Brilho */
+    box-shadow: 0 0 12px rgba(255, 0, 255, 0.5);
 }
 
 /* Estilos para listas não ordenadas */
@@ -272,22 +375,80 @@ ul {
 
 /* Estilos para itens de lista */
 li {
-    /* Cor de fundo roxa escura */
-    background-color: #2B124C;
+    /* Fundo escuro */
+    background-color: #1a1a2e;
     /* Preenchimento interno */
     padding: 1.5rem;
     /* Bordas arredondadas */
     border-radius: 8px;
-    /* Borda esquerda rosa */
-    border-left: 5px solid #854F6C;
-    /* Sombra para profundidade */
+    /* Borda esquerda com cor destaque */
+    border-left: 5px solid #ff00ff;
+    /* Sombra leve */
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    /* Layout flex vertical */
     /* Layout flex vertical */
     display: flex;
     flex-direction: column;
     /* Espaçamento entre elementos */
     gap: 0.5rem;
+}
+
+/* Header da meta */
+.meta-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.meta-header h3 {
+    margin: 0;
+    color: #e0e0e0;
+    font-size: 1.2rem;
+}
+
+.status {
+    color: #b0b0b0;
+    font-weight: bold;
+}
+
+.toggle-details {
+    background: none;
+    border: none;
+    color: #e0e0e0;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.toggle-details:hover {
+    color: #ff00ff;
+}
+
+/* Detalhes da meta */
+.meta-details {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #333;
+}
+
+.meta-details p {
+    margin: 0.25rem 0;
+    color: #b0b0b0;
+}
+
+/* Ações da meta */
+.meta-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.meta-actions input[type="checkbox"] {
+    margin: 0;
+}
+
+.meta-actions label {
+    margin-left: 0.5rem;
 }
 
 /* Checkbox dentro de li */
@@ -305,12 +466,11 @@ li label {
 }
 
 /* Títulos h3 dentro de li */
-/* Títulos h3 dentro de li */
 li h3 {
     /* Remove margem */
     margin: 0;
-    /* Cor do texto clara */
-    color: #FBE4D8;
+    /* Texto claro */
+    color: #e0e0e0;
     /* Tamanho da fonte */
     font-size: 1.2rem;
 }
@@ -319,8 +479,8 @@ li h3 {
 li p {
     /* Margem vertical pequena */
     margin: 0.25rem 0;
-    /* Cor rosa clara */
-    color: #DFB6B2;
+    /* Texto cinza claro */
+    color: #b0b0b0;
 }
 
 /* Botões de iniciar e excluir */
@@ -341,34 +501,40 @@ li p {
     margin-top: 0.5rem;
     /* Alinha à esquerda */
     align-self: flex-start;
+    /* Transição para hover */
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 /* Botão de iniciar */
 .start-btn {
-    /* Cor de fundo rosa clara */
-    background-color: #DFB6B2;
-    /* Cor do texto escura */
-    color: #190019;
+    /* Fundo rosa neon */
+    background-color: #ff00ff;
+    /* Texto escuro */
+    color: #0a0a0a;
 }
 
 /* Hover para botão de iniciar */
 .start-btn:hover {
-    /* Cor de fundo clara */
-    background-color: #FBE4D8;
+    /* Fundo mais claro */
+    background-color: #ff33ff;
+    /* Brilho */
+    box-shadow: 0 0 8px rgba(255, 0, 255, 0.5);
 }
 
 /* Botão de excluir */
 .delete-btn {
-    /* Cor de fundo rosa */
-    background-color: #854F6C;
-    /* Cor do texto clara */
-    color: #FBE4D8;
+    /* Fundo roxo */
+    background-color: #8a2be2;
+    /* Texto claro */
+    color: #e0e0e0;
 }
 
 /* Hover para botão de excluir */
 .delete-btn:hover {
-    /* Cor de fundo roxa */
-    background-color: #522B5B;
+    /* Fundo mais escuro */
+    background-color: #9932cc;
+    /* Brilho */
+    box-shadow: 0 0 8px rgba(138, 43, 226, 0.5);
 }
 
 /* Barra de progresso */
@@ -377,22 +543,34 @@ progress {
     width: 100%;
     /* Altura */
     height: 20px;
+    /* Bordas arredondadas */
     border-radius: 10px;
-    background-color: #2B124C;
+    /* Fundo escuro */
+    background-color: #1a1a2e;
+    /* Borda sutil */
+    border: 1px solid #333;
 }
 
 progress::-webkit-progress-bar {
-    background-color: #2B124C;
+    /* Fundo escuro */
+    background-color: #1a1a2e;
+    /* Bordas arredondadas */
     border-radius: 10px;
 }
 
 progress::-webkit-progress-value {
-    background-color: #DFB6B2;
+    /* Fundo neon rosa */
+    background-color: #ff00ff;
+    /* Bordas arredondadas */
     border-radius: 10px;
+    /* Brilho */
+    box-shadow: 0 0 8px rgba(255, 0, 255, 0.5);
 }
 
 progress::-moz-progress-bar {
-    background-color: #DFB6B2;
+    /* Fundo neon rosa */
+    background-color: #ff00ff;
+    /* Bordas arredondadas */
     border-radius: 10px;
 }
 
@@ -425,18 +603,26 @@ footer {
 
 /* Cartões do dashboard */
 .card {
-    /* Cor de fundo cinza escura */
-    background-color: #232323;
-    /* Borda cinza */
-    border: 1px solid #3a3a3a;
+    /* Fundo levemente mais claro */
+    background-color: #2a2a3e;
+    /* Borda sutil */
+    border: 1px solid #333;
     /* Bordas arredondadas */
     border-radius: 12px;
     /* Preenchimento interno */
     padding: 1rem;
-    /* Cor do texto clara */
+    /* Texto claro */
     color: #e0e0e0;
-    /* Sombra para profundidade */
+    /* Sombra leve */
     box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    /* Transição para hover */
+    transition: box-shadow 0.2s ease;
+}
+
+/* Hover para cards */
+.card:hover {
+    /* Brilho aumentado */
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6);
 }
 
 /* Wrapper para gráficos */

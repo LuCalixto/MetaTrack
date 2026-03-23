@@ -1,24 +1,15 @@
-<!-- Declaração do tipo de documento HTML5 -->
+
 <!DOCTYPE html>
-<!-- Elemento raiz da página, com idioma português brasileiro -->
 <html lang="pt-br">
-<!-- Cabeçalho da página, contém metadados -->
-<head>
-    <!-- Define a codificação de caracteres como UTF-8 -->
-    <meta charset="UTF-8">
-    <!-- Configura a viewport para dispositivos móveis -->
+<head><meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Título da página exibido na aba do navegador -->
-    <title>Sistema de Metas</title>
-    <!-- Link para o arquivo CSS externo -->
+    <title>Meta Track</title>
     <link rel="stylesheet" href="Inicial.css">
 </head>
-<!-- Corpo da página, onde o conteúdo visível é definido -->
 <body>
-    <!-- Cabeçalho principal da página -->
     <header>
-        <!-- Título principal do sistema -->
-        <h1>Sistema de Metas</h1>
+        <h1>Meta Track</h1>
+        <img src="logo.png" alt="Logo" class="logo">
     </header>
     <!-- Barra lateral retrátil para navegação -->
     <aside class="sidebar" id="sidebar">
@@ -48,23 +39,32 @@
             <h2>Adicionar Nova Meta</h2>
             <!-- Formulário para adicionar meta, chama função addGoal ao submeter -->
             <form onsubmit="addGoal(event)">
-                <!-- Rótulo para o campo de título -->
+                <!-- Campo de título -->
                 <label for="titulo-meta">Título da Meta:</label>
-                <!-- Campo de entrada de texto para o título, obrigatório -->
-                <input type="text" id="titulo-meta" name="titulo-meta" required><br><br>
+                <input type="text" id="titulo-meta" name="titulo-meta" required>
 
-                <!-- Rótulo para o campo de descrição -->
+                <!-- Campo de descrição -->
                 <label for="descricao-meta">Descrição:</label>
-                <!-- Campo de texto longo para descrição -->
-                <textarea id="descricao-meta" name="descricao-meta" rows="4" cols="50"></textarea><br><br>
+                <textarea id="descricao-meta" name="descricao-meta" rows="3"></textarea>
 
-                <!-- Rótulo para o campo de data limite -->
+                <!-- Campo de categoria -->
+                <label for="categoria-meta">Categoria:</label>
+                <input type="text" id="categoria-meta" name="categoria-meta" placeholder="Ex: Pessoal, Trabalho, Saúde">
+
+                <!-- Campo de prioridade -->
+                <label for="prioridade-meta">Prioridade:</label>
+                <select id="prioridade-meta" name="prioridade-meta">
+                    <option value="baixa">Baixa</option>
+                    <option value="media" selected>Média</option>
+                    <option value="alta">Alta</option>
+                </select>
+
+                <!-- Campo de data -->
                 <label for="data-limite">Data Limite:</label>
-                <!-- Campo de entrada de data -->
-                <input type="date" id="data-limite" name="data-limite"><br><br>
+                <input type="date" id="data-limite" name="data-limite">
 
-                <!-- Botão para submeter o formulário -->
-                <button type="submit">Adicionar Meta</button>
+                <!-- Botão para submeter -->
+                <button type="submit" class="full-width">Adicionar Meta</button>
             </form>
         </section>
 
@@ -72,6 +72,35 @@
         <section id="minhas-metas">
             <!-- Título da seção -->
             <h2>Minhas Metas</h2>
+            <!-- Filtros e ordenação -->
+            <div class="filters">
+                <label for="filter-status">Filtrar por Status:</label>
+                <select id="filter-status">
+                    <option value="">Todos</option>
+                    <option value="Não iniciado">Não iniciado</option>
+                    <option value="Em Andamento">Em Andamento</option>
+                    <option value="Atrasada">Atrasada</option>
+                    <option value="Concluída">Concluída</option>
+                </select>
+
+                <label for="filter-prioridade">Filtrar por Prioridade:</label>
+                <select id="filter-prioridade">
+                    <option value="">Todas</option>
+                    <option value="baixa">Baixa</option>
+                    <option value="media">Média</option>
+                    <option value="alta">Alta</option>
+                </select>
+
+                <label for="filter-categoria">Filtrar por Categoria:</label>
+                <input type="text" id="filter-categoria" placeholder="Digite a categoria">
+
+                <label for="sort-date">Ordenar por Data:</label>
+                <select id="sort-date">
+                    <option value="">Sem ordenação</option>
+                    <option value="asc">Crescente</option>
+                    <option value="desc">Decrescente</option>
+                </select>
+            </div>
             <!-- Lista não ordenada onde as metas serão renderizadas dinamicamente -->
             <ul>
             </ul>
@@ -150,10 +179,12 @@
             const title = document.getElementById('titulo-meta').value;
             const description = document.getElementById('descricao-meta').value;
             const date = document.getElementById('data-limite').value;
+            const prioridade = document.getElementById('prioridade-meta').value;
+            const categoria = document.getElementById('categoria-meta').value;
             // Recupera as metas existentes do localStorage
             const goals = JSON.parse(localStorage.getItem('goals')) || [];
             // Adiciona a nova meta ao array
-            goals.push({ title, description, date, completed: false, started: false, startedAt: null, completedAt: null });
+            goals.push({ title, description, date, prioridade, categoria, completed: false, started: false, startedAt: null, completedAt: null });
             // Salva o array atualizado no localStorage
             localStorage.setItem('goals', JSON.stringify(goals));
             // Renderiza as metas novamente
@@ -162,6 +193,8 @@
             document.getElementById('titulo-meta').value = '';
             document.getElementById('descricao-meta').value = '';
             document.getElementById('data-limite').value = '';
+            document.getElementById('prioridade-meta').value = 'media';
+            document.getElementById('categoria-meta').value = '';
         }
 
         // Função para determinar o status de uma meta
@@ -187,28 +220,68 @@
         // Função para renderizar as metas na página
         function renderGoals() {
             // Recupera as metas do localStorage
-            const goals = JSON.parse(localStorage.getItem('goals')) || [];
+            const allGoals = JSON.parse(localStorage.getItem('goals')) || [];
+
+            // Obtém os valores dos filtros
+            const statusFilter = document.getElementById('filter-status').value;
+            const prioridadeFilter = document.getElementById('filter-prioridade').value;
+            const categoriaFilter = document.getElementById('filter-categoria').value.toLowerCase();
+            const sortDate = document.getElementById('sort-date').value;
+
+            // Cria uma lista de metas com índices originais
+            let goalsWithIndex = allGoals.map((goal, index) => ({ ...goal, originalIndex: index }));
+
+            // Filtra por status
+            if (statusFilter) {
+                goalsWithIndex = goalsWithIndex.filter(item => getStatus(item) === statusFilter);
+            }
+
+            // Filtra por prioridade
+            if (prioridadeFilter) {
+                goalsWithIndex = goalsWithIndex.filter(item => item.prioridade === prioridadeFilter);
+            }
+
+            // Filtra por categoria
+            if (categoriaFilter) {
+                goalsWithIndex = goalsWithIndex.filter(item => item.categoria && item.categoria.toLowerCase().includes(categoriaFilter));
+            }
+
+            // Ordena por data se selecionado
+            if (sortDate === 'asc') {
+                goalsWithIndex.sort((a, b) => new Date(a.date) - new Date(b.date));
+            } else if (sortDate === 'desc') {
+                goalsWithIndex.sort((a, b) => new Date(b.date) - new Date(a.date));
+            }
+
             // Seleciona a lista onde as metas serão exibidas
             const ul = document.querySelector('#minhas-metas ul');
             // Limpa o conteúdo atual da lista
             ul.innerHTML = '';
-            // Para cada meta, cria um item de lista
-            goals.forEach((goal, index) => {
+            // Para cada meta filtrada, cria um item de lista
+            goalsWithIndex.forEach((item, filteredIndex) => {
                 // Determina o status da meta
-                const status = getStatus(goal);
+                const status = getStatus(item);
                 // Cria o elemento li
                 const li = document.createElement('li');
                 // Define o HTML interno do li
                 li.innerHTML = `
-                    <input type="checkbox" id="meta${index}" ${goal.completed ? 'checked' : ''}>
-                    <label for="meta${index}">
-                        <h3>${goal.title}</h3>
-                        <p>Descrição: ${goal.description}</p>
-                        <p>Data Limite: ${goal.date}</p>
-                        <p>Status: ${status}</p>
-                    </label>
-                    ${!goal.started ? `<button class="start-btn" data-index="${index}">Iniciar</button>` : ''}
-                    <button class="delete-btn" data-index="${index}">Excluir</button>
+                    <div class="meta-header">
+                        <h3>${item.title}</h3>
+                        <span class="status">${status}</span>
+                        <button class="toggle-details" data-index="${filteredIndex}">▼</button>
+                    </div>
+                    <div class="meta-details" id="details${filteredIndex}" style="display: none;">
+                        <p>Descrição: ${item.description}</p>
+                        <p>Data Limite: ${item.date}</p>
+                        <p>Prioridade: ${item.prioridade ? item.prioridade.charAt(0).toUpperCase() + item.prioridade.slice(1) : 'Não definida'}</p>
+                        <p>Categoria: ${item.categoria || 'Não definida'}</p>
+                        <div class="meta-actions">
+                            <input type="checkbox" id="meta${filteredIndex}" data-index="${item.originalIndex}" ${item.completed ? 'checked' : ''}>
+                            <label for="meta${filteredIndex}">Concluída</label>
+                            ${!item.started ? `<button class="start-btn" data-index="${item.originalIndex}">Iniciar</button>` : ''}
+                            <button class="delete-btn" data-index="${item.originalIndex}">Excluir</button>
+                        </div>
+                    </div>
                 `;
                 // Adiciona o li à lista
                 ul.appendChild(li);
@@ -222,9 +295,11 @@
         // Função para anexar event listeners aos elementos dinâmicos
         function attachListeners() {
             // Para cada checkbox de meta
-            document.querySelectorAll('#minhas-metas input[type="checkbox"]').forEach((checkbox, index) => {
+            document.querySelectorAll('#minhas-metas input[type="checkbox"]').forEach((checkbox) => {
                 // Adiciona listener para mudança de estado
                 checkbox.addEventListener('change', () => {
+                    // Obtém o índice da meta
+                    const index = parseInt(checkbox.dataset.index);
                     // Recupera as metas
                     const goals = JSON.parse(localStorage.getItem('goals'));
                     // Atualiza o status de concluída
@@ -273,6 +348,21 @@
                     localStorage.setItem('goals', JSON.stringify(goals));
                     // Renderiza
                     renderGoals();
+                });
+            });
+
+            // Para cada botão de toggle
+            document.querySelectorAll('.toggle-details').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = this.dataset.index;
+                    const details = document.getElementById(`details${index}`);
+                    if (details.style.display === 'none') {
+                        details.style.display = 'block';
+                        this.textContent = '▲';
+                    } else {
+                        details.style.display = 'none';
+                        this.textContent = '▼';
+                    }
                 });
             });
         }
@@ -420,7 +510,7 @@
                     datasets: [{
                         label: 'Concluídas',
                         data: weekCount,
-                        borderColor: '#bb86fc',
+                        borderColor: '#ff00ff',
                         backgroundColor: 'rgba(187, 134, 252, 0.2)',
                         tension: 0.3,
                         fill: true
@@ -463,14 +553,20 @@
         if (!localStorage.getItem('goals')) {
             // Se não há metas salvas, cria metas iniciais
             const initialGoals = [
-                { title: 'Meta 1: Aprender HTML', description: 'Estudar os fundamentos do HTML.', date: '2026-04-01', completed: false, started: false, startedAt: null, completedAt: null },
-                { title: 'Meta 2: Exercitar diariamente', description: 'Fazer exercícios físicos todos os dias.', date: '2026-12-31', completed: true, started: true, startedAt: '2026-01-10T00:00:00.000Z', completedAt: '2026-01-20T00:00:00.000Z' }
+                { title: 'Meta 1: Aprender HTML', description: 'Estudar os fundamentos do HTML.', date: '2026-04-01', prioridade: 'alta', categoria: 'Educação', completed: false, started: false, startedAt: null, completedAt: null },
+                { title: 'Meta 2: Exercitar diariamente', description: 'Fazer exercícios físicos todos os dias.', date: '2026-12-31', prioridade: 'media', categoria: 'Saúde', completed: true, started: true, startedAt: '2026-01-10T00:00:00.000Z', completedAt: '2026-01-20T00:00:00.000Z' }
             ];
             // Salva as metas iniciais
             localStorage.setItem('goals', JSON.stringify(initialGoals));
         }
         // Renderiza as metas na inicialização
         renderGoals();
+
+        // Event listeners para filtros
+        document.getElementById('filter-status').addEventListener('change', renderGoals);
+        document.getElementById('filter-prioridade').addEventListener('change', renderGoals);
+        document.getElementById('filter-categoria').addEventListener('input', renderGoals);
+        document.getElementById('sort-date').addEventListener('change', renderGoals);
     </script>
 </body>
 </html>
