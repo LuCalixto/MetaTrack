@@ -1,0 +1,463 @@
+/* Estilos para o corpo da página */
+body {
+    /* Família de fontes para melhor legibilidade */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* Altura da linha para melhor espaçamento */
+    line-height: 1.6;
+    /* Remove margens e preenchimentos padrão */
+    margin: 0;
+    padding: 0;
+    /* Cor de fundo escura */
+    background-color: #060a1e;
+    /* Cor do texto clara */
+    color: #FBE4D8;
+}
+
+/* Estilos para o cabeçalho */
+header {
+    /* Cor de fundo roxa escura */
+    background-color: #2B124C;
+    /* Cor do texto clara */
+    color: #FBE4D8;
+    /* Preenchimento interno */
+    padding: 2rem;
+    /* Alinhamento centralizado */
+    text-align: center;
+    /* Sombra para profundidade */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    /* Margem esquerda para compensar a sidebar */
+    margin-left: 220px;
+}
+
+/* Ajuste do cabeçalho quando a sidebar está colapsada */
+body.sidebar-collapsed header {
+    /* Margem esquerda reduzida */
+    margin-left: 64px;
+}
+
+/* Estilos para o título no cabeçalho */
+header h1 {
+    /* Remove margem padrão */
+    margin: 0;
+    /* Tamanho da fonte grande */
+    font-size: 2.5rem;
+}
+
+/* Estilos para a sidebar */
+.sidebar {
+    /* Posicionamento fixo */
+    position: fixed;
+    /* No topo esquerdo */
+    top: 0;
+    left: 0;
+    /* Largura padrão */
+    width: 220px;
+    /* Altura total */
+    height: 100%;
+    /* Cor de fundo roxa escura */
+    background-color: #2B124C;
+    /* Borda direita amarela */
+    border-right: 1px solid #ffdf99;
+    /* Preenchimento superior */
+    padding-top: 3rem;
+    /* Sombra para profundidade */
+    box-shadow: 2px 0 12px rgba(0,0,0,0.4);
+    /* Transição suave para largura */
+    transition: width 0.25s ease;
+    /* Oculta overflow */
+    overflow: hidden;
+}
+
+/* Sidebar quando colapsada */
+.sidebar.collapsed {
+    /* Largura reduzida */
+    width: 64px;
+}
+
+/* Estilos para o botão de toggle da sidebar */
+.sidebar-toggle {
+    /* Posicionamento absoluto */
+    position: absolute;
+    /* No topo direito */
+    top: 0.75rem;
+    right: -38px;
+    /* Dimensões */
+    width: 34px;
+    height: 34px;
+    /* Forma circular */
+    border-radius: 50%;
+    /* Sem borda */
+    border: none;
+    /* Cor de fundo marrom */
+    background-color: #856e4f;
+    /* Cor do texto clara */
+    color: #FBE4D8;
+    /* Tamanho da fonte */
+    font-size: 1.2rem;
+    /* Cursor de ponteiro */
+    cursor: pointer;
+    /* Sombra vermelha */
+    box-shadow: 0 0 8px rgba(255, 0, 0, 0.4);
+}
+
+/* Ajuste do main e header quando sidebar colapsada */
+.sidebar.collapsed + main,
+.sidebar.collapsed ~ main,
+.sidebar.collapsed + header,
+.sidebar.collapsed ~ header {
+    /* Margem esquerda reduzida */
+    margin-left: 64px;
+}
+
+/* Estilos para a navegação na sidebar */
+.sidebar nav ul {
+    /* Remove estilo de lista */
+    list-style: none;
+    /* Remove preenchimento e margem */
+    padding: 0;
+    margin: 0;
+    /* Layout flex vertical */
+    display: flex;
+    flex-direction: column;
+    /* Espaçamento entre itens */
+    gap: 0.75rem;
+}
+
+/* Estilos para links na navegação */
+nav a {
+    /* Cor amarela */
+    color: #ffdf99;
+    /* Remove sublinhado */
+    text-decoration: none;
+    /* Negrito */
+    font-weight: bold;
+    /* Tamanho da fonte */
+    font-size: 1.1rem;
+    /* Exibe como bloco */
+    display: block;
+    /* Preenchimento interno */
+    padding: 0.75rem 1rem;
+    /* Transição suave para fundo */
+    transition: background 0.2s ease;
+}
+
+/* Hover para links na navegação */
+nav a:hover {
+    /* Remove sublinhado */
+    text-decoration: none;
+    /* Cor do texto clara */
+    color: #FBE4D8;
+    /* Cor de fundo roxa */
+    background-color: #522B5B;
+    /* Bordas arredondadas */
+    border-radius: 6px;
+}
+
+/* Estilos para o conteúdo principal */
+/* Estilos para o conteúdo principal */
+main {
+    /* Largura máxima */
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 2rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin-left: 220px;
+}
+
+body.sidebar-collapsed main {
+    margin-left: 64px;
+}
+
+section {
+    background-color: #190019;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    border: 1px solid #2B124C;
+}
+
+section h2 {
+    color: #FBE4D8;
+    border-bottom: 3px solid #854F6C;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+    font-size: 1.8rem;
+}
+
+form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+form label {
+    font-weight: bold;
+    color: #DFB6B2;
+}
+
+/* Estilos para inputs e textareas em formulários */
+form input, form textarea {
+    /* Preenchimento interno */
+    padding: 0.75rem;
+    /* Borda roxa */
+    border: 1px solid #522B5B;
+    /* Bordas arredondadas */
+    border-radius: 8px;
+    /* Cor de fundo roxa escura */
+    background-color: #2B124C;
+    /* Cor do texto clara */
+    color: #FBE4D8;
+    /* Tamanho da fonte */
+    font-size: 1rem;
+}
+
+/* Foco para inputs e textareas */
+form input:focus, form textarea:focus {
+    /* Remove outline padrão */
+    outline: none;
+    /* Borda rosa */
+    border-color: #854F6C;
+}
+
+/* Textarea ocupa duas colunas */
+form textarea {
+    /* Ocupa duas colunas no grid */
+    grid-column: span 2;
+}
+
+/* Botão do formulário */
+form button {
+    /* Ocupa duas colunas */
+    grid-column: span 2;
+    /* Margem superior */
+    margin-top: 1rem;
+    /* Preenchimento interno */
+    padding: 0.75rem;
+    /* Cor de fundo roxa */
+    background-color: #522B5B;
+    /* Cor do texto clara */
+    color: #FBE4D8;
+    /* Sem borda */
+    border: none;
+    /* Bordas arredondadas */
+    border-radius: 8px;
+    /* Cursor de ponteiro */
+    cursor: pointer;
+    /* Tamanho da fonte */
+    font-size: 1rem;
+    /* Negrito */
+    font-weight: bold;
+}
+
+/* Hover para botão do formulário */
+form button:hover {
+    /* Cor de fundo rosa */
+    background-color: #854F6C;
+}
+
+/* Estilos para listas não ordenadas */
+ul {
+    /* Remove estilo de lista */
+    list-style: none;
+    /* Remove preenchimento */
+    padding: 0;
+    /* Layout em grid responsivo */
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    /* Espaçamento entre itens */
+    gap: 1rem;
+}
+
+/* Estilos para itens de lista */
+li {
+    /* Cor de fundo roxa escura */
+    background-color: #2B124C;
+    /* Preenchimento interno */
+    padding: 1.5rem;
+    /* Bordas arredondadas */
+    border-radius: 8px;
+    /* Borda esquerda rosa */
+    border-left: 5px solid #854F6C;
+    /* Sombra para profundidade */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    /* Layout flex vertical */
+    /* Layout flex vertical */
+    display: flex;
+    flex-direction: column;
+    /* Espaçamento entre elementos */
+    gap: 0.5rem;
+}
+
+/* Checkbox dentro de li */
+li input[type="checkbox"] {
+    /* Alinha à esquerda */
+    align-self: flex-start;
+    /* Remove margem */
+    margin: 0;
+}
+
+/* Label dentro de li */
+li label {
+    /* Ocupa espaço restante */
+    flex: 1;
+}
+
+/* Títulos h3 dentro de li */
+/* Títulos h3 dentro de li */
+li h3 {
+    /* Remove margem */
+    margin: 0;
+    /* Cor do texto clara */
+    color: #FBE4D8;
+    /* Tamanho da fonte */
+    font-size: 1.2rem;
+}
+
+/* Parágrafos dentro de li */
+li p {
+    /* Margem vertical pequena */
+    margin: 0.25rem 0;
+    /* Cor rosa clara */
+    color: #DFB6B2;
+}
+
+/* Botões de iniciar e excluir */
+.start-btn, .delete-btn {
+    /* Preenchimento interno */
+    padding: 0.5rem 1rem;
+    /* Sem borda */
+    border: none;
+    /* Bordas arredondadas */
+    border-radius: 6px;
+    /* Cursor de ponteiro */
+    cursor: pointer;
+    /* Tamanho da fonte */
+    font-size: 0.9rem;
+    /* Negrito */
+    font-weight: bold;
+    /* Margem superior */
+    margin-top: 0.5rem;
+    /* Alinha à esquerda */
+    align-self: flex-start;
+}
+
+/* Botão de iniciar */
+.start-btn {
+    /* Cor de fundo rosa clara */
+    background-color: #DFB6B2;
+    /* Cor do texto escura */
+    color: #190019;
+}
+
+/* Hover para botão de iniciar */
+.start-btn:hover {
+    /* Cor de fundo clara */
+    background-color: #FBE4D8;
+}
+
+/* Botão de excluir */
+.delete-btn {
+    /* Cor de fundo rosa */
+    background-color: #854F6C;
+    /* Cor do texto clara */
+    color: #FBE4D8;
+}
+
+/* Hover para botão de excluir */
+.delete-btn:hover {
+    /* Cor de fundo roxa */
+    background-color: #522B5B;
+}
+
+/* Barra de progresso */
+progress {
+    /* Largura total */
+    width: 100%;
+    /* Altura */
+    height: 20px;
+    border-radius: 10px;
+    background-color: #2B124C;
+}
+
+progress::-webkit-progress-bar {
+    background-color: #2B124C;
+    border-radius: 10px;
+}
+
+progress::-webkit-progress-value {
+    background-color: #DFB6B2;
+    border-radius: 10px;
+}
+
+progress::-moz-progress-bar {
+    background-color: #DFB6B2;
+    border-radius: 10px;
+}
+
+/* Estilos para o rodapé */
+footer {
+    /* Alinhamento centralizado */
+    text-align: center;
+    /* Preenchimento interno */
+    padding: 2rem;
+    /* Cor de fundo roxa escura */
+    background-color: #190019;
+    /* Cor do texto clara */
+    color: #FBE4D8;
+    /* Margem superior */
+    margin-top: 2rem;
+    /* Borda superior roxa */
+    border-top: 1px solid #2B124C;
+}
+
+/* Grid do dashboard */
+.dashboard-grid {
+    /* Layout em grid responsivo */
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    /* Espaçamento entre itens */
+    gap: 1rem;
+    /* Margem inferior */
+    margin-bottom: 1rem;
+}
+
+/* Cartões do dashboard */
+.card {
+    /* Cor de fundo cinza escura */
+    background-color: #232323;
+    /* Borda cinza */
+    border: 1px solid #3a3a3a;
+    /* Bordas arredondadas */
+    border-radius: 12px;
+    /* Preenchimento interno */
+    padding: 1rem;
+    /* Cor do texto clara */
+    color: #e0e0e0;
+    /* Sombra para profundidade */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+/* Wrapper para gráficos */
+.charts-wrapper {
+    /* Layout em grid responsivo */
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    /* Espaçamento entre itens */
+    gap: 1.2rem;
+}
+
+/* Cartões de gráfico */
+.chart-card {
+    /* Cor de fundo cinza escura */
+    background-color: #232323;
+    /* Borda cinza */
+    border: 1px solid #3a3a3a;
+    /* Bordas arredondadas */
+    border-radius: 12px;
+    /* Preenchimento interno */
+    padding: 1rem;
+    /* Sombra para profundidade */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}

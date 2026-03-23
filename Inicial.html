@@ -1,0 +1,476 @@
+<!-- Declaração do tipo de documento HTML5 -->
+<!DOCTYPE html>
+<!-- Elemento raiz da página, com idioma português brasileiro -->
+<html lang="pt-br">
+<!-- Cabeçalho da página, contém metadados -->
+<head>
+    <!-- Define a codificação de caracteres como UTF-8 -->
+    <meta charset="UTF-8">
+    <!-- Configura a viewport para dispositivos móveis -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Título da página exibido na aba do navegador -->
+    <title>Sistema de Metas</title>
+    <!-- Link para o arquivo CSS externo -->
+    <link rel="stylesheet" href="Inicial.css">
+</head>
+<!-- Corpo da página, onde o conteúdo visível é definido -->
+<body>
+    <!-- Cabeçalho principal da página -->
+    <header>
+        <!-- Título principal do sistema -->
+        <h1>Sistema de Metas</h1>
+    </header>
+    <!-- Barra lateral retrátil para navegação -->
+    <aside class="sidebar" id="sidebar">
+        <!-- Botão para alternar o estado da barra lateral -->
+        <button id="sidebarToggle" class="sidebar-toggle">☰</button>
+        <!-- Navegação com links para seções da página -->
+        <nav>
+            <!-- Lista não ordenada de links -->
+            <ul>
+                <!-- Link para a seção de adicionar meta -->
+                <li><a href="#adicionar-meta">Adicionar Meta</a></li>
+                <!-- Link para a seção de minhas metas -->
+                <li><a href="#minhas-metas">Minhas Metas</a></li>
+                <!-- Link para a seção de progresso -->
+                <li><a href="#progresso">Progresso</a></li>
+                <!-- Link para a seção de dashboard -->
+                <li><a href="#dashboard">Dashboard</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Conteúdo principal da página -->
+    <main>
+        <!-- Seção para adicionar uma nova meta -->
+        <section id="adicionar-meta">
+            <!-- Título da seção -->
+            <h2>Adicionar Nova Meta</h2>
+            <!-- Formulário para adicionar meta, chama função addGoal ao submeter -->
+            <form onsubmit="addGoal(event)">
+                <!-- Rótulo para o campo de título -->
+                <label for="titulo-meta">Título da Meta:</label>
+                <!-- Campo de entrada de texto para o título, obrigatório -->
+                <input type="text" id="titulo-meta" name="titulo-meta" required><br><br>
+
+                <!-- Rótulo para o campo de descrição -->
+                <label for="descricao-meta">Descrição:</label>
+                <!-- Campo de texto longo para descrição -->
+                <textarea id="descricao-meta" name="descricao-meta" rows="4" cols="50"></textarea><br><br>
+
+                <!-- Rótulo para o campo de data limite -->
+                <label for="data-limite">Data Limite:</label>
+                <!-- Campo de entrada de data -->
+                <input type="date" id="data-limite" name="data-limite"><br><br>
+
+                <!-- Botão para submeter o formulário -->
+                <button type="submit">Adicionar Meta</button>
+            </form>
+        </section>
+
+        <!-- Seção para listar as metas do usuário -->
+        <section id="minhas-metas">
+            <!-- Título da seção -->
+            <h2>Minhas Metas</h2>
+            <!-- Lista não ordenada onde as metas serão renderizadas dinamicamente -->
+            <ul>
+            </ul>
+        </section>
+
+        <!-- Seção para mostrar o progresso geral -->
+        <section id="progresso">
+            <!-- Título da seção -->
+            <h2>Progresso Geral</h2>
+            <!-- Parágrafo com texto dinâmico do progresso -->
+            <p id="progress-text">Metas concluídas: 1 de 2</p>
+            <!-- Barra de progresso -->
+            <progress id="progress-bar" value="50" max="100"></progress>
+        </section>
+
+        <!-- Seção do dashboard com métricas e gráficos -->
+        <section id="dashboard">
+            <!-- Título da seção -->
+            <h2>Dashboard de Performance</h2>
+            <!-- Grade de cartões para métricas -->
+            <div class="dashboard-grid">
+                <!-- Cartão para metas concluídas na semana -->
+                <article class="card">
+                    <!-- Título do cartão -->
+                    <h3>Concluídas (semana)</h3>
+                    <!-- Parágrafo com número de metas concluídas na semana -->
+                    <p id="concluidas-semana"></p>
+                    <!-- Parágrafo com comparação com semana anterior -->
+                    <p id="comparativo-semana"></p>
+                </article>
+                <!-- Cartão para metas concluídas no mês -->
+                <article class="card">
+                    <!-- Título do cartão -->
+                    <h3>Concluídas (mês)</h3>
+                    <!-- Parágrafo com número de metas concluídas no mês -->
+                    <p id="concluidas-mes"></p>
+                    <!-- Parágrafo com comparação com mês anterior -->
+                    <p id="comparativo-mes"></p>
+                </article>
+            </div>
+            <!-- Container para os gráficos -->
+            <div class="charts-wrapper">
+                <!-- Cartão para gráfico semanal -->
+                <div class="chart-card">
+                    <!-- Título do gráfico -->
+                    <h3>Metas Concluídas (últimas 4 semanas)</h3>
+                    <!-- Canvas para renderizar o gráfico semanal -->
+                    <canvas id="weeklyChart"></canvas>
+                </div>
+                <!-- Cartão para gráfico mensal -->
+                <div class="chart-card">
+                    <!-- Título do gráfico -->
+                    <h3>Metas Concluídas (últimos 6 meses)</h3>
+                    <!-- Canvas para renderizar o gráfico mensal -->
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Rodapé da página -->
+    <footer>
+        <!-- Texto de direitos autorais -->
+        <p>&copy; 2026 Sistema de Metas. Todos os direitos reservados.</p>
+    </footer>
+
+    <!-- Script externo para biblioteca Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Script interno para funcionalidades JavaScript -->
+    <script>
+        // Função para adicionar uma nova meta
+        function addGoal(event) {
+            // Previne o comportamento padrão do formulário
+            event.preventDefault();
+            // Obtém os valores dos campos do formulário
+            const title = document.getElementById('titulo-meta').value;
+            const description = document.getElementById('descricao-meta').value;
+            const date = document.getElementById('data-limite').value;
+            // Recupera as metas existentes do localStorage
+            const goals = JSON.parse(localStorage.getItem('goals')) || [];
+            // Adiciona a nova meta ao array
+            goals.push({ title, description, date, completed: false, started: false, startedAt: null, completedAt: null });
+            // Salva o array atualizado no localStorage
+            localStorage.setItem('goals', JSON.stringify(goals));
+            // Renderiza as metas novamente
+            renderGoals();
+            // Limpa os campos do formulário
+            document.getElementById('titulo-meta').value = '';
+            document.getElementById('descricao-meta').value = '';
+            document.getElementById('data-limite').value = '';
+        }
+
+        // Função para determinar o status de uma meta
+        function getStatus(goal) {
+            // Se a meta estiver concluída, retorna 'Concluída'
+            if (goal.completed) return 'Concluída';
+            // Se a meta foi iniciada
+            if (goal.started) {
+                // Obtém a data atual
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                // Obtém a data limite da meta
+                const due = new Date(goal.date);
+                // Se a data limite passou, retorna 'Atrasada'
+                if (due < today) return 'Atrasada';
+                // Caso contrário, retorna 'Em Andamento'
+                return 'Em Andamento';
+            }
+            // Se não foi iniciada, retorna 'Não iniciado'
+            return 'Não iniciado';
+        }
+
+        // Função para renderizar as metas na página
+        function renderGoals() {
+            // Recupera as metas do localStorage
+            const goals = JSON.parse(localStorage.getItem('goals')) || [];
+            // Seleciona a lista onde as metas serão exibidas
+            const ul = document.querySelector('#minhas-metas ul');
+            // Limpa o conteúdo atual da lista
+            ul.innerHTML = '';
+            // Para cada meta, cria um item de lista
+            goals.forEach((goal, index) => {
+                // Determina o status da meta
+                const status = getStatus(goal);
+                // Cria o elemento li
+                const li = document.createElement('li');
+                // Define o HTML interno do li
+                li.innerHTML = `
+                    <input type="checkbox" id="meta${index}" ${goal.completed ? 'checked' : ''}>
+                    <label for="meta${index}">
+                        <h3>${goal.title}</h3>
+                        <p>Descrição: ${goal.description}</p>
+                        <p>Data Limite: ${goal.date}</p>
+                        <p>Status: ${status}</p>
+                    </label>
+                    ${!goal.started ? `<button class="start-btn" data-index="${index}">Iniciar</button>` : ''}
+                    <button class="delete-btn" data-index="${index}">Excluir</button>
+                `;
+                // Adiciona o li à lista
+                ul.appendChild(li);
+            });
+            // Anexa os event listeners aos elementos
+            attachListeners();
+            // Atualiza o progresso
+            updateProgress();
+        }
+
+        // Função para anexar event listeners aos elementos dinâmicos
+        function attachListeners() {
+            // Para cada checkbox de meta
+            document.querySelectorAll('#minhas-metas input[type="checkbox"]').forEach((checkbox, index) => {
+                // Adiciona listener para mudança de estado
+                checkbox.addEventListener('change', () => {
+                    // Recupera as metas
+                    const goals = JSON.parse(localStorage.getItem('goals'));
+                    // Atualiza o status de concluída
+                    goals[index].completed = checkbox.checked;
+                    // Define como iniciada
+                    goals[index].started = true;
+                    // Define timestamps se necessário
+                    if (!goals[index].startedAt) goals[index].startedAt = new Date().toISOString();
+                    if (checkbox.checked && !goals[index].completedAt) goals[index].completedAt = new Date().toISOString();
+                    if (!checkbox.checked) goals[index].completedAt = null;
+                    // Salva no localStorage
+                    localStorage.setItem('goals', JSON.stringify(goals));
+                    // Renderiza novamente
+                    renderGoals();
+                });
+            });
+            // Para cada botão de iniciar
+            document.querySelectorAll('.start-btn').forEach(btn => {
+                // Adiciona listener para clique
+                btn.addEventListener('click', function() {
+                    // Obtém o índice da meta
+                    const index = parseInt(this.dataset.index);
+                    // Recupera as metas
+                    const goals = JSON.parse(localStorage.getItem('goals'));
+                    // Define como iniciada
+                    goals[index].started = true;
+                    // Define timestamp se necessário
+                    if (!goals[index].startedAt) goals[index].startedAt = new Date().toISOString();
+                    // Salva
+                    localStorage.setItem('goals', JSON.stringify(goals));
+                    // Renderiza
+                    renderGoals();
+                });
+            });
+            // Para cada botão de excluir
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                // Adiciona listener para clique
+                btn.addEventListener('click', function() {
+                    // Obtém o índice
+                    const index = parseInt(this.dataset.index);
+                    // Recupera as metas
+                    const goals = JSON.parse(localStorage.getItem('goals'));
+                    // Remove a meta do array
+                    goals.splice(index, 1);
+                    // Salva
+                    localStorage.setItem('goals', JSON.stringify(goals));
+                    // Renderiza
+                    renderGoals();
+                });
+            });
+        }
+
+        // Função para atualizar o progresso geral
+        function updateProgress() {
+            // Recupera as metas
+            const goals = JSON.parse(localStorage.getItem('goals')) || [];
+            // Conta o total de metas
+            const total = goals.length;
+            // Conta as concluídas
+            const checked = goals.filter(g => g.completed).length;
+            // Calcula a porcentagem
+            const percentage = total > 0 ? (checked / total) * 100 : 0;
+            // Atualiza o texto do progresso
+            document.getElementById('progress-text').textContent = `Metas concluídas: ${checked} de ${total}`;
+            // Atualiza a barra de progresso
+            document.getElementById('progress-bar').value = percentage;
+            // Computa as análises
+            computeAnalytics(goals);
+        }
+
+        // Função para formatar datas
+        function formatDate(date) {
+            // Retorna a data no formato YYYY-MM-DD
+            return date.toISOString().split('T')[0];
+        }
+
+        // Função para obter o início da semana (segunda-feira)
+        function getWeekStart(date) {
+            // Cria uma cópia da data
+            const d = new Date(date);
+            // Calcula o dia da semana (0=domingo, 1=segunda, etc.)
+            const day = d.getDay();
+            // Calcula o deslocamento para segunda-feira
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            // Retorna a data da segunda-feira
+            return new Date(d.setDate(diff));
+        }
+
+        // Função para obter o início do mês
+        function getMonthStart(date) {
+            // Cria uma cópia da data
+            const d = new Date(date);
+            // Define o dia como 1
+            d.setDate(1);
+            // Retorna o início do mês
+            return d;
+        }
+
+        // Função para computar análises de metas
+        function computeAnalytics(goals) {
+            // Obtém a data atual
+            const now = new Date();
+            // Calcula o início da semana atual
+            const thisWeekStart = getWeekStart(now);
+            // Calcula o início da semana passada
+            const lastWeekStart = new Date(thisWeekStart);
+            lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+            // Calcula o fim da semana atual
+            const nextWeekStart = new Date(thisWeekStart);
+            nextWeekStart.setDate(nextWeekStart.getDate() + 7);
+
+            // Calcula o início do mês atual
+            const thisMonthStart = getMonthStart(now);
+            // Calcula o início do mês passado
+            const lastMonthStart = new Date(thisMonthStart);
+            lastMonthStart.setMonth(lastMonthStart.getMonth() - 1);
+            // Calcula o fim do mês atual
+            const nextMonthStart = new Date(thisMonthStart);
+            nextMonthStart.setMonth(nextMonthStart.getMonth() + 1);
+
+            // Conta metas concluídas nesta semana
+            const completedThisWeek = goals.filter(g => g.completed && g.completedAt && new Date(g.completedAt) >= thisWeekStart && new Date(g.completedAt) < nextWeekStart).length;
+            // Conta metas concluídas na semana passada
+            const completedLastWeek = goals.filter(g => g.completed && g.completedAt && new Date(g.completedAt) >= lastWeekStart && new Date(g.completedAt) < thisWeekStart).length;
+            // Conta metas concluídas neste mês
+            const completedThisMonth = goals.filter(g => g.completed && g.completedAt && new Date(g.completedAt) >= thisMonthStart && new Date(g.completedAt) < nextMonthStart).length;
+            // Conta metas concluídas no mês passado
+            const completedLastMonth = goals.filter(g => g.completed && g.completedAt && new Date(g.completedAt) >= lastMonthStart && new Date(g.completedAt) < thisMonthStart).length;
+
+            // Atualiza os elementos com os valores calculados
+            document.getElementById('concluidas-semana').textContent = `${completedThisWeek} metas concluídas nesta semana`;
+            document.getElementById('comparativo-semana').textContent = `Semana passada: ${completedLastWeek} (${Math.round(((completedThisWeek - completedLastWeek) / (completedLastWeek || 1)) * 100)}%)`;
+            document.getElementById('concluidas-mes').textContent = `${completedThisMonth} metas concluídas neste mês`;
+            document.getElementById('comparativo-mes').textContent = `Mês passado: ${completedLastMonth} (${Math.round(((completedThisMonth - completedLastMonth) / (completedLastMonth || 1)) * 100)}%)`;
+
+            // Desenha os gráficos
+            drawCharts(goals);
+        }
+
+        // Variáveis globais para os gráficos
+        let weeklyChart = null;
+        let monthlyChart = null;
+
+        // Função para desenhar os gráficos
+        function drawCharts(goals) {
+            // Obtém a data atual
+            const now = new Date();
+            // Arrays para rótulos e contagens semanais
+            const weekLabels = [];
+            const weekCount = [0, 0, 0, 0];
+            // Calcula o início da primeira semana (4 semanas atrás)
+            const dateStart = new Date(getWeekStart(now));
+            dateStart.setDate(dateStart.getDate() - 21);
+
+            // Para cada uma das 4 semanas
+            for (let i = 0; i < 4; i++) {
+                // Calcula o início da semana
+                const start = new Date(dateStart);
+                start.setDate(start.getDate() + i * 7);
+                // Calcula o fim da semana
+                const end = new Date(start);
+                end.setDate(start.getDate() + 7);
+                // Adiciona o rótulo
+                weekLabels.push(`${formatDate(start)} - ${formatDate(new Date(end.setDate(end.getDate()-1)))}`);
+                // Conta metas concluídas nessa semana
+                weekCount[i] = goals.filter(g => g.completed && g.completedAt && new Date(g.completedAt) >= start && new Date(g.completedAt) < end).length;
+            }
+
+            // Arrays para rótulos e contagens mensais
+            const monthLabels = [];
+            const monthCount = [];
+            // Calcula o início do primeiro mês (6 meses atrás)
+            const firstMonth = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+            // Para cada um dos 6 meses
+            for (let i = 0; i < 6; i++) {
+                // Calcula o início do mês
+                const mStart = new Date(firstMonth.getFullYear(), firstMonth.getMonth() + i, 1);
+                // Calcula o fim do mês
+                const mEnd = new Date(mStart.getFullYear(), mStart.getMonth() + 1, 1);
+                // Adiciona o rótulo (mês abreviado e ano)
+                monthLabels.push(mStart.toLocaleString('pt-BR', { month: 'short', year: 'numeric' }));
+                // Conta metas concluídas nesse mês
+                monthCount.push(goals.filter(g => g.completed && g.completedAt && new Date(g.completedAt) >= mStart && new Date(g.completedAt) < mEnd).length);
+            }
+
+            // Destrói o gráfico semanal anterior se existir
+            if (weeklyChart) weeklyChart.destroy();
+            // Cria o gráfico semanal
+            weeklyChart = new Chart(document.getElementById('weeklyChart'), {
+                type: 'line',
+                data: {
+                    labels: weekLabels,
+                    datasets: [{
+                        label: 'Concluídas',
+                        data: weekCount,
+                        borderColor: '#bb86fc',
+                        backgroundColor: 'rgba(187, 134, 252, 0.2)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            });
+
+            // Destrói o gráfico mensal anterior se existir
+            if (monthlyChart) monthlyChart.destroy();
+            // Cria o gráfico mensal
+            monthlyChart = new Chart(document.getElementById('monthlyChart'), {
+                type: 'bar',
+                data: {
+                    labels: monthLabels,
+                    datasets: [{
+                        label: 'Concluídas',
+                        data: monthCount,
+                        backgroundColor: '#03dac6'
+                    }]
+                },
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        // Event listener para o botão de toggle da sidebar
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        sidebarToggle.addEventListener('click', () => {
+            // Alterna a classe 'sidebar-collapsed' no body
+            document.body.classList.toggle('sidebar-collapsed');
+            // Alterna a classe 'collapsed' na sidebar
+            document.getElementById('sidebar').classList.toggle('collapsed');
+            // Verifica se está colapsada
+            const isCollapsed = document.body.classList.contains('sidebar-collapsed');
+            // Muda o texto do botão
+            sidebarToggle.textContent = isCollapsed ? '▶' : '☰';
+        });
+
+        // Inicialização
+        if (!localStorage.getItem('goals')) {
+            // Se não há metas salvas, cria metas iniciais
+            const initialGoals = [
+                { title: 'Meta 1: Aprender HTML', description: 'Estudar os fundamentos do HTML.', date: '2026-04-01', completed: false, started: false, startedAt: null, completedAt: null },
+                { title: 'Meta 2: Exercitar diariamente', description: 'Fazer exercícios físicos todos os dias.', date: '2026-12-31', completed: true, started: true, startedAt: '2026-01-10T00:00:00.000Z', completedAt: '2026-01-20T00:00:00.000Z' }
+            ];
+            // Salva as metas iniciais
+            localStorage.setItem('goals', JSON.stringify(initialGoals));
+        }
+        // Renderiza as metas na inicialização
+        renderGoals();
+    </script>
+</body>
+</html>
