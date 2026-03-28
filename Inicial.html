@@ -14,19 +14,21 @@
     <!-- Barra lateral retrátil para navegação -->
     <aside class="sidebar" id="sidebar">
         <!-- Botão para alternar o estado da barra lateral -->
-        <button id="sidebarToggle" class="sidebar-toggle">☰</button>
+        <button id="sidebarToggle" class="sidebar-toggle" aria-label="Abrir ou fechar menu">
+            <span class="hamburger-icon">☰</span>
+        </button>
         <!-- Navegação com links para seções da página -->
         <nav>
             <!-- Lista não ordenada de links -->
             <ul>
                 <!-- Link para a seção de adicionar meta -->
-                <li><a href="#adicionar-meta">Adicionar Meta</a></li>
+                <li><a href="#adicionar-meta"><span class="nav-text">Adicionar Meta</span></a></li>
                 <!-- Link para a seção de minhas metas -->
-                <li><a href="#minhas-metas">Minhas Metas</a></li>
+                <li><a href="#minhas-metas"><span class="nav-text">Minhas Metas</span></a></li>
                 <!-- Link para a seção de progresso -->
-                <li><a href="#progresso">Progresso</a></li>
+                <li><a href="#progresso"><span class="nav-text">Progresso</span></a></li>
                 <!-- Link para a seção de dashboard -->
-                <li><a href="#dashboard">Dashboard</a></li>
+                <li><a href="#dashboard"><span class="nav-text">Dashboard</span></a></li>
             </ul>
         </nav>
     </aside>
@@ -161,6 +163,9 @@
         </section>
     </main>
 
+    <!-- Toast notification -->
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
     <!-- Rodapé da página -->
     <footer>
         <!-- Texto de direitos autorais -->
@@ -171,10 +176,20 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Script interno para funcionalidades JavaScript -->
     <script>
+        // Função de mostrar toast
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2300);
+        }
+
         // Função para adicionar uma nova meta
         function addGoal(event) {
             // Previne o comportamento padrão do formulário
-            event.preventDefault();
+            if (event) event.preventDefault();
             // Obtém os valores dos campos do formulário
             const title = document.getElementById('titulo-meta').value;
             const description = document.getElementById('descricao-meta').value;
@@ -195,6 +210,8 @@
             document.getElementById('data-limite').value = '';
             document.getElementById('prioridade-meta').value = 'media';
             document.getElementById('categoria-meta').value = '';
+            // Feedback de sucesso
+            showToast('Meta criada com sucesso!');
         }
 
         // Função para determinar o status de uma meta
@@ -545,8 +562,11 @@
             document.getElementById('sidebar').classList.toggle('collapsed');
             // Verifica se está colapsada
             const isCollapsed = document.body.classList.contains('sidebar-collapsed');
-            // Muda o texto do botão
-            sidebarToggle.textContent = isCollapsed ? '▶' : '☰';
+            // Muda o ícone do botão (mantém o span do hambúrguer)
+            const iconSpan = sidebarToggle.querySelector('.hamburger-icon');
+            if (iconSpan) {
+                iconSpan.textContent = isCollapsed ? '▶' : '☰';
+            }
         });
 
         // Inicialização
