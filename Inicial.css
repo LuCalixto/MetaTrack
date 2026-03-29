@@ -96,13 +96,8 @@ header h1::before {
 }
 
 /* Esconder texto quando sidebar colapsada */
-.sidebar.collapsed nav a .nav-text {
+.sidebar.collapsed nav a span {
     display: none;
-}
-
-/* Mostrar só ícone no colapsado */
-.sidebar.collapsed nav a::after {
-    content: '';
 }
 
 /* Estilos para o botão de toggle da sidebar */
@@ -157,11 +152,6 @@ header h1::before {
     margin-left: 64px;
 }
 
-/* Quando a sidebar estiver colapsada, o botão fica à esquerda dentro do painel estreito */
-.sidebar.collapsed .sidebar-toggle {
-    left: 0.75rem;
-}
-
 /* Estilos para a navegação na sidebar */
 .sidebar nav ul {
     /* Remove estilo de lista */
@@ -187,22 +177,13 @@ nav a {
     /* Tamanho da fonte */
     font-size: 1.1rem;
     /* Exibe como bloco */
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: block;
     /* Preenchimento interno */
     padding: 0.75rem 1rem;
     /* Transição suave para fundo */
     transition: background 0.2s ease, color 0.2s ease;
     /* Centralizar conteúdo */
     text-align: center;
-}
-
-/* Quando menu colapsado, só ícone */
-.sidebar.collapsed nav a {
-    justify-content: center;
-    padding: 0.75rem 0;
-    width: 100%;
 }
 
 /* Ícones para links */
@@ -246,18 +227,43 @@ nav a.active {
 
 /* Estilos para o conteúdo principal */
 main {
-    /* Largura máxima */
-    max-width: 1200px;
-    margin: 2rem auto;
-    padding: 0 2rem;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 2rem;
-    margin-left: 220px;
+    max-width: calc(100vw - 40px);
+    margin: 100px auto 2rem auto;
+    padding: 0 1rem;
+}
+
+.main-top-row {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+#adicionar-meta {
+    flex: 2;
+    background-color: #1f1f3e;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 1rem;
+    max-height: calc(100vh - 160px);
+    overflow-y: auto;
+}
+
+#calendar-widget {
+    flex: 1;
+    position: static;
+    top: auto;
+    height: auto;
+}
+
+section#minhas-metas,
+section#progresso,
+section#dashboard {
+    margin-top: 1rem;
 }
 
 body.sidebar-collapsed main {
-    margin-left: 64px;
+    margin-left: 80px;
 }
 
 section {
@@ -284,30 +290,6 @@ section h2 {
     margin-bottom: 1.5rem;
     /* Tamanho da fonte */
     font-size: 1.8rem;
-}
-
-/* Toast notification */
-.toast {
-    position: fixed;
-    bottom: 5rem;
-    right: 1.5rem;
-    min-width: 220px;
-    max-width: 320px;
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
-    background: rgba(32, 32, 32, 0.95);
-    color: #ffffff;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.4);
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(10px);
-    transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.toast.show {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateY(0);
 }
 
 /* Filtros */
@@ -390,6 +372,106 @@ form textarea {
     resize: vertical;
     min-height: 60px;
 }
+
+/* Calendário Meta Track */
+.calendar-widget {
+    position: static;
+    width: 100%;
+    background: #1a1a2e;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 0.85rem;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.45);
+    color: #e0e0e0;
+    z-index: 1;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.calendar-header span {
+    font-size: 0.95rem;
+    font-weight: bold;
+    text-transform: capitalize;
+}
+
+.calendar-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 0.6rem;
+}
+
+.calendar-table th,
+.calendar-table td {
+    width: 14.28%;
+    padding: 0.28rem;
+    text-align: center;
+    font-size: 0.74rem;
+}
+
+.calendar-day {
+    display: inline-flex;
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.calendar-day:hover {
+    background-color: rgba(100, 0, 255, 0.35);
+}
+
+.day-with-goal {
+    background-color: rgba(138, 43, 226, 0.25);
+    border: 1px solid #ff00ff;
+}
+
+.calendar-details {
+    max-height: 220px;
+    overflow-y: auto;
+    border: 1px solid #555;
+    border-radius: 8px;
+    padding: 0.5rem;
+    background: #12122a;
+}
+
+.calendar-details h3 {
+    margin: 0 0 0.5rem;
+    font-size: 0.9rem;
+}
+
+.calendar-details ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.calendar-details li {
+    font-size: 0.82rem;
+    margin-bottom: 0.35rem;
+    color: #cfb9ff;
+}
+
+.calendar-tooltip {
+    position: absolute;
+    padding: 0.35rem 0.5rem;
+    border-radius: 5px;
+    background: rgba(5, 5, 30, 0.96);
+    border: 1px solid #8a2be2;
+    color: #fff;
+    font-size: 0.70rem;
+    pointer-events: none;
+    z-index: 1500;
+    display: none;
+}
+
 
 form button {
     align-self: flex-start;

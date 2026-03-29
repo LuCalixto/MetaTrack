@@ -6,16 +6,16 @@
     <title>Meta Track</title>
     <link rel="stylesheet" href="Inicial.css">
 </head>
-<body>
+<body class="sidebar-collapsed">
     <header>
         <h1>Meta Track</h1>
         <img src="logo.png" alt="Logo" class="logo">
     </header>
     <!-- Barra lateral retrátil para navegação -->
-    <aside class="sidebar" id="sidebar">
+    <aside class="sidebar collapsed" id="sidebar">
         <!-- Botão para alternar o estado da barra lateral -->
         <button id="sidebarToggle" class="sidebar-toggle" aria-label="Abrir ou fechar menu">
-            <span class="hamburger-icon">☰</span>
+            <span class="hamburger-icon">▶</span>
         </button>
         <!-- Navegação com links para seções da página -->
         <nav>
@@ -35,10 +35,11 @@
 
     <!-- Conteúdo principal da página -->
     <main>
-        <!-- Seção para adicionar uma nova meta -->
-        <section id="adicionar-meta">
-            <!-- Título da seção -->
-            <h2>Adicionar Nova Meta</h2>
+        <div class="main-top-row">
+            <!-- Seção para adicionar uma nova meta -->
+            <section id="adicionar-meta">
+                <!-- Título da seção -->
+                <h2>Adicionar Nova Meta</h2>
             <!-- Formulário para adicionar meta, chama função addGoal ao submeter -->
             <form onsubmit="addGoal(event)">
                 <!-- Campo de título -->
@@ -69,6 +70,34 @@
                 <button type="submit" class="full-width">Adicionar Meta</button>
             </form>
         </section>
+
+        <!-- Calendário mensal (lado direito) -->
+        <aside id="calendar-widget" class="calendar-widget" aria-label="Calendário de metas">
+            <div class="calendar-header">
+                <button id="prevMonthBtn" aria-label="Mês anterior">◀</button>
+                <span id="calendarMonthLabel"></span>
+                <button id="nextMonthBtn" aria-label="Próximo mês">▶</button>
+            </div>
+            <table class="calendar-table">
+                <thead>
+                    <tr>
+                        <th>Dom</th>
+                        <th>Seg</th>
+                        <th>Ter</th>
+                        <th>Qua</th>
+                        <th>Qui</th>
+                        <th>Sex</th>
+                        <th>Sáb</th>
+                    </tr>
+                </thead>
+                <tbody id="calendarBody"></tbody>
+            </table>
+            <div id="calendarDetails" class="calendar-details" aria-live="polite">
+                <h3>Metas do dia</h3>
+                <ul id="calendarGoalsList"></ul>
+            </div>
+        </aside>
+        </div>
 
         <!-- Seção para listar as metas do usuário -->
         <section id="minhas-metas">
@@ -161,7 +190,8 @@
                 </div>
             </div>
         </section>
-    </main>
+
+    <div id="calendarTooltip" class="calendar-tooltip" aria-hidden="true"></div>
 
     <!-- Toast notification -->
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -184,6 +214,132 @@
             setTimeout(() => {
                 toast.classList.remove('show');
             }, 2300);
+        }
+
+        let calendarCurrentDate = new Date();
+
+        function formatMonthYear(date) {
+            return date.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+        }
+
+        function getGoalDaysForMonth(date) {
+            const goals = JSON.parse(localStorage.getItem('goals')) || [];
+            const days = new Map();
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            goals.forEach((goal) => {
+                if (goal.date) {
+                    const d = new Date(goal.date);
+                    if (d.getFullYear() === year && d.getMonth() === month) {
+                        const day = d.getDate();
+                        if (!days.has(day)) days.set(day, []);
+                        days.get(day).push(goal);
+                    }
+                }
+            });
+            return days;
+        }
+
+        function showDayGoals(goals, dateText) {
+            const details = document.getElementById('calendarGoalsList');
+            const title = document.querySelector('#calendarDetails h3');
+            if (!details || !title) return;
+
+            title.textContent = goals.length > 0 ? `Metas de ${dateText}` : `Nenhuma meta em ${dateText}`;
+            details.innerHTML = '';
+
+            if (goals.length === 0) {
+                const li = document.createElement('li');
+                li.textContent = 'Sem metas cadastradas';
+                details.appendChild(li);
+                return;
+            }
+
+            goals.forEach((goal) => {
+                const li = document.createElement('li');
+                li.textContent = `${goal.title} – ${goal.description || 'sem descrição'}`;
+                details.appendChild(li);
+            });
+        }
+
+        function renderCalendar() {
+            const monthLabel = document.getElementById('calendarMonthLabel');
+            const calendarBody = document.getElementById('calendarBody');
+            if (!monthLabel || !calendarBody) return;
+
+            monthLabel.textContent = formatMonthYear(calendarCurrentDate);
+
+            const firstOfMonth = new Date(calendarCurrentDate.getFullYear(), calendarCurrentDate.getMonth(), 1);
+            const startingWeekday = firstOfMonth.getDay();
+            const daysInMonth = new Date(calendarCurrentDate.getFullYear(), calendarCurrentDate.getMonth() + 1, 0).getDate();
+
+            const goalDays = getGoalDaysForMonth(calendarCurrentDate);
+            calendarBody.innerHTML = '';
+
+            let html = '';
+            let dayNumber = 1;
+
+            for (let week = 0; week < 6; week++) {
+                html += '<tr>';
+                for (let weekday = 0; weekday < 7; weekday++) {
+                    if (week === 0 && weekday < startingWeekday) {
+                        html += '<td class="empty"></td>';
+                    } else if (dayNumber > daysInMonth) {
+                        html += '<td class="empty"></td>';
+                    } else {
+                        const dayClass = goalDays.has(dayNumber) ? 'calendar-day day-with-goal' : 'calendar-day';
+                        html += `<td><span class="${dayClass}">${dayNumber}</span></td>`;
+                        dayNumber++;
+                    }
+                }
+                html += '</tr>';
+                if (dayNumber > daysInMonth) break;
+            }
+
+            calendarBody.innerHTML = html;
+
+            const dayCells = calendarBody.querySelectorAll('.calendar-day');
+            dayCells.forEach((cell) => {
+                const day = parseInt(cell.textContent, 10);
+                const goalDays = getGoalDaysForMonth(calendarCurrentDate);
+                const goalsForDay = goalDays.get(day) || [];
+
+                if (goalsForDay.length > 0) {
+                    cell.setAttribute('title', goalsForDay.map((g) => g.title).join(', '));
+                } else {
+                    cell.removeAttribute('title');
+                }
+
+                cell.addEventListener('click', () => {
+                    const fullDate = new Date(calendarCurrentDate.getFullYear(), calendarCurrentDate.getMonth(), day);
+                    const formatted = fullDate.toLocaleDateString('pt-BR');
+                    showDayGoals(goalsForDay, formatted);
+                });
+            });
+        }
+
+        function setupCalendarControls() {
+            const prev = document.getElementById('prevMonthBtn');
+            const next = document.getElementById('nextMonthBtn');
+
+            if (prev) {
+                prev.addEventListener('click', () => {
+                    calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() - 1);
+                    renderCalendar();
+                });
+            }
+            if (next) {
+                next.addEventListener('click', () => {
+                    calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + 1);
+                    renderCalendar();
+                });
+            }
+        }
+
+        function refreshCalendar() {
+            if (document.getElementById('calendar-widget')) {
+                renderCalendar();
+            }
         }
 
         // Função para adicionar uma nova meta
@@ -307,6 +463,8 @@
             attachListeners();
             // Atualiza o progresso
             updateProgress();
+            // Atualiza o calendário para dias com metas
+            refreshCalendar();
         }
 
         // Função para anexar event listeners aos elementos dinâmicos
@@ -579,8 +737,19 @@
             // Salva as metas iniciais
             localStorage.setItem('goals', JSON.stringify(initialGoals));
         }
+        // Inicialização do calendário e filtros
+        setupCalendarControls();
+        renderCalendar();
+
         // Renderiza as metas na inicialização
         renderGoals();
+
+        // Ajusta o ícone do toggle de acordo com o estado inicial
+        const iconSpanInit = document.querySelector('#sidebarToggle .hamburger-icon');
+        if (iconSpanInit) {
+            const isCollapsedInit = document.body.classList.contains('sidebar-collapsed');
+            iconSpanInit.textContent = isCollapsedInit ? '▶' : '☰';
+        }
 
         // Event listeners para filtros
         document.getElementById('filter-status').addEventListener('change', renderGoals);
