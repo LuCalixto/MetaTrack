@@ -106,35 +106,29 @@
             <!-- Filtros e ordenação -->
             <div class="filters">
                 <label for="filter-status">Filtrar por Status:</label>
-                <select id="filter-status">
-                    <option value="">Todos</option>
-                    <option value="Não iniciado">Não iniciado</option>
-                    <option value="Em Andamento">Em Andamento</option>
-                    <option value="Atrasada">Atrasada</option>
-                    <option value="Concluída">Concluída</option>
-                </select>
-
+                <select id="filter-status"><option value="">Todos</option><option value="Não iniciado">Não iniciado</option><option value="Em Andamento">Em Andamento</option><option value="Atrasada">Atrasada</option><option value="Concluída">Concluída</option></select>
                 <label for="filter-prioridade">Filtrar por Prioridade:</label>
-                <select id="filter-prioridade">
-                    <option value="">Todas</option>
-                    <option value="baixa">Baixa</option>
-                    <option value="media">Média</option>
-                    <option value="alta">Alta</option>
-                </select>
-
+                <select id="filter-prioridade"><option value="">Todas</option><option value="baixa">Baixa</option><option value="media">Média</option><option value="alta">Alta</option></select>
                 <label for="filter-categoria">Filtrar por Categoria:</label>
                 <input type="text" id="filter-categoria" placeholder="Digite a categoria">
-
                 <label for="sort-date">Ordenar por Data:</label>
-                <select id="sort-date">
-                    <option value="">Sem ordenação</option>
-                    <option value="asc">Crescente</option>
-                    <option value="desc">Decrescente</option>
-                </select>
+                <select id="sort-date"><option value="">Sem ordenação</option><option value="asc">Crescente</option><option value="desc">Decrescente</option></select>
             </div>
-            <!-- Lista não ordenada onde as metas serão renderizadas dinamicamente -->
-            <ul>
-            </ul>
+            <!-- Toggle de visualização -->
+            <div class="view-toggle">
+                <button id="list-view">📋 Lista</button>
+                <button id="cards-view" class="active">📇 Cards</button>
+            </div>
+            <!-- Container para lista -->
+            <div id="goals-list-container" style="display: none;">
+                <ul>
+                </ul>
+            </div>
+            <!-- Container para cards -->
+            <div id="goals-cards-container">
+                <div class="goals-cards" id="goalsCards">
+                </div>
+            </div>
         </section>
 
         <!-- Seção para mostrar o progresso geral -->
@@ -172,6 +166,13 @@
                     <p id="comparativo-mes"></p>
                 </article>
             </div>
+            <!-- Seção de conquistas -->
+            <div class="achievements-section">
+                <h3>🏆 Conquistas Desbloqueadas</h3>
+                <div class="achievements-grid" id="achievementsGrid">
+                    <!-- Medalhas serão inseridas dinamicamente aqui -->
+                </div>
+            </div>
             <!-- Container para os gráficos -->
             <div class="charts-wrapper">
                 <!-- Cartão para gráfico semanal -->
@@ -196,6 +197,9 @@
     <!-- Toast notification -->
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
+    <!-- Power-up container -->
+    <div id="powerUpContainer"></div>
+
     <!-- Rodapé da página -->
     <footer>
         <!-- Texto de direitos autorais -->
@@ -214,6 +218,26 @@
             setTimeout(() => {
                 toast.classList.remove('show');
             }, 2300);
+        }
+
+        // Função para criar efeito de power-up
+        function showPowerUp(type = 'create') {
+            const container = document.getElementById('powerUpContainer');
+            const powerUp = document.createElement('div');
+            powerUp.className = `power-up power-up-${type}`;
+            
+            const messages = {
+                create: '✨ META CRIADA! ✨',
+                start: '🚀 INICIADO! 🚀',
+                complete: '🎉 CONCLUÍDO! 🎉'
+            };
+            
+            powerUp.textContent = messages[type] || messages.create;
+            container.appendChild(powerUp);
+            
+            setTimeout(() => {
+                powerUp.remove();
+            }, 2000);
         }
 
         let calendarCurrentDate = new Date();
@@ -238,6 +262,45 @@
                 }
             });
             return days;
+        }
+
+        const goalColors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#ffa07a', '#98d8c8', '#f7dc6f', '#bb8fce', '#85c1e2'];
+        
+        function getGoalColor(goalIndex) {
+            return goalColors[goalIndex % goalColors.length];
+        }
+
+        function getGoalIntervalDaysForMonth(date) {
+            const goals = JSON.parse(localStorage.getItem('goals')) || [];
+            const intervalDays = new Map();
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            const currentMonthStart = new Date(year, month, 1);
+            const currentMonthEnd = new Date(year, month + 1, 0);
+            
+            goals.forEach((goal, goalIndex) => {
+                if (goal.started && goal.startedAt && goal.date) {
+                    const startDate = new Date(goal.startedAt);
+                    const endDate = goal.completed && goal.completedAt ? new Date(goal.completedAt) : new Date(goal.date);
+                    
+                    if (startDate <= currentMonthEnd && endDate >= currentMonthStart) {
+                        const rangeStart = startDate > currentMonthStart ? startDate : currentMonthStart;
+                        const rangeEnd = endDate < currentMonthEnd ? endDate : currentMonthEnd;
+                        
+                        for (let d = new Date(rangeStart); d <= rangeEnd; d.setDate(d.getDate() + 1)) {
+                            const dayNum = d.getDate();
+                            if (!intervalDays.has(dayNum)) intervalDays.set(dayNum, []);
+                            intervalDays.get(dayNum).push({
+                                goalIndex: goalIndex,
+                                isStarted: d.getTime() === startDate.getTime(),
+                                isCompleted: d.getTime() === endDate.getTime(),
+                                title: goal.title
+                            });
+                        }
+                    }
+                }
+            });
+            return intervalDays;
         }
 
         function showDayGoals(goals, dateText) {
@@ -274,6 +337,7 @@
             const daysInMonth = new Date(calendarCurrentDate.getFullYear(), calendarCurrentDate.getMonth() + 1, 0).getDate();
 
             const goalDays = getGoalDaysForMonth(calendarCurrentDate);
+            const intervalDays = getGoalIntervalDaysForMonth(calendarCurrentDate);
             calendarBody.innerHTML = '';
 
             let html = '';
@@ -287,8 +351,28 @@
                     } else if (dayNumber > daysInMonth) {
                         html += '<td class="empty"></td>';
                     } else {
-                        const dayClass = goalDays.has(dayNumber) ? 'calendar-day day-with-goal' : 'calendar-day';
-                        html += `<td><span class="${dayClass}">${dayNumber}</span></td>`;
+                        let dayClass = 'calendar-day';
+                        let dataAttr = '';
+                        const dayIntervalGoals = intervalDays.get(dayNumber) || [];
+                        
+                        if (goalDays.has(dayNumber)) dayClass += ' day-with-goal';
+                        if (dayIntervalGoals.length > 0) {
+                            dayClass += ' day-in-progress';
+                            if (dayIntervalGoals.length === 1) {
+                                const goalIndex = dayIntervalGoals[0].goalIndex;
+                                if (dayIntervalGoals[0].isStarted) {
+                                    dayClass += ' day-started';
+                                } else if (dayIntervalGoals[0].isCompleted) {
+                                    dayClass += ' day-completed';
+                                }
+                                dataAttr = ` data-goal-index="${goalIndex}"`;
+                            } else {
+                                dayClass += ' day-multiple';
+                                const goalIndices = dayIntervalGoals.map(g => g.goalIndex).join(',');
+                                dataAttr = ` data-goal-indices="${goalIndices}"`;
+                            }
+                        }
+                        html += `<td><span class="${dayClass}"${dataAttr}>${dayNumber}</span></td>`;
                         dayNumber++;
                     }
                 }
@@ -302,18 +386,43 @@
             dayCells.forEach((cell) => {
                 const day = parseInt(cell.textContent, 10);
                 const goalDays = getGoalDaysForMonth(calendarCurrentDate);
+                const intervalDays = getGoalIntervalDaysForMonth(calendarCurrentDate);
                 const goalsForDay = goalDays.get(day) || [];
-
-                if (goalsForDay.length > 0) {
-                    cell.setAttribute('title', goalsForDay.map((g) => g.title).join(', '));
+                const intervalGoalsForDay = intervalDays.get(day) || [];
+                
+                let allTitles = goalsForDay.map(g => g.title);
+                const intervalTitles = intervalGoalsForDay.map(g => g.title).filter(t => !allTitles.includes(t));
+                allTitles = [...allTitles, ...intervalTitles];
+                
+                if (allTitles.length > 0) {
+                    cell.setAttribute('title', allTitles.join(', '));
                 } else {
                     cell.removeAttribute('title');
+                }
+                
+                if (intervalGoalsForDay.length === 1) {
+                    const color = getGoalColor(intervalGoalsForDay[0].goalIndex);
+                    if (cell.classList.contains('day-started') || cell.classList.contains('day-completed')) {
+                        cell.style.borderColor = color;
+                    } else {
+                        cell.style.borderColor = color;
+                        cell.style.color = color;
+                    }
+                } else if (intervalGoalsForDay.length > 1) {
+                    const colors = intervalGoalsForDay.map(g => getGoalColor(g.goalIndex));
+                    cell.setAttribute('data-goal-colors', colors.join(' '));
                 }
 
                 cell.addEventListener('click', () => {
                     const fullDate = new Date(calendarCurrentDate.getFullYear(), calendarCurrentDate.getMonth(), day);
                     const formatted = fullDate.toLocaleDateString('pt-BR');
-                    showDayGoals(goalsForDay, formatted);
+                    const allGoals = [...goalsForDay];
+                    intervalGoalsForDay.forEach(g => {
+                        if (!allGoals.find(og => og.title === g.title)) {
+                            allGoals.push({title: g.title, description: 'Meta em progresso'});
+                        }
+                    });
+                    showDayGoals(allGoals, formatted);
                 });
             });
         }
@@ -366,8 +475,7 @@
             document.getElementById('data-limite').value = '';
             document.getElementById('prioridade-meta').value = 'media';
             document.getElementById('categoria-meta').value = '';
-            // Feedback de sucesso
-            showToast('Meta criada com sucesso!');
+            
         }
 
         // Função para determinar o status de uma meta
@@ -426,8 +534,23 @@
                 goalsWithIndex.sort((a, b) => new Date(b.date) - new Date(a.date));
             }
 
+            // Renderiza lista
+            renderGoalsList(goalsWithIndex);
+            // Renderiza cards
+            renderGoalsCards(goalsWithIndex);
+
+            // Anexa os event listeners aos elementos
+            attachListeners();
+            // Atualiza o progresso
+            updateProgress();
+            // Atualiza o calendário para dias com metas
+            refreshCalendar();
+        }
+
+        // Função para renderizar metas como lista
+        function renderGoalsList(goalsWithIndex) {
             // Seleciona a lista onde as metas serão exibidas
-            const ul = document.querySelector('#minhas-metas ul');
+            const ul = document.querySelector('#goals-list-container ul');
             // Limpa o conteúdo atual da lista
             ul.innerHTML = '';
             // Para cada meta filtrada, cria um item de lista
@@ -459,18 +582,41 @@
                 // Adiciona o li à lista
                 ul.appendChild(li);
             });
-            // Anexa os event listeners aos elementos
-            attachListeners();
-            // Atualiza o progresso
-            updateProgress();
-            // Atualiza o calendário para dias com metas
-            refreshCalendar();
+        }
+
+        // Função para renderizar metas como cards
+        function renderGoalsCards(goalsWithIndex) {
+            const cardsContainer = document.getElementById('goalsCards');
+            cardsContainer.innerHTML = '';
+
+            goalsWithIndex.forEach((item, filteredIndex) => {
+                const status = getStatus(item);
+                let statusClass = 'not-started';
+                if (status === 'Concluída') statusClass = 'completed';
+                else if (status === 'Atrasada') statusClass = 'overdue';
+                else if (status === 'Em Andamento') statusClass = 'in-progress';
+
+                const card = document.createElement('div');
+                card.className = `goal-card ${statusClass}`;
+                card.innerHTML = `
+                    <div class="goal-card-title">${item.title}</div>
+                    <div class="goal-card-status">${status}</div>
+                    <div class="goal-card-date">📅 ${item.date}</div>
+                    <div class="goal-card-actions">
+                        <input type="checkbox" class="goal-card-checkbox" id="card-meta${filteredIndex}" data-index="${item.originalIndex}" ${item.completed ? 'checked' : ''}>
+                        <label for="card-meta${filteredIndex}">✓</label>
+                        ${!item.started ? `<button class="start-btn" data-index="${item.originalIndex}">▶</button>` : ''}
+                        <button class="delete-btn" data-index="${item.originalIndex}">🗑️</button>
+                    </div>
+                `;
+                cardsContainer.appendChild(card);
+            });
         }
 
         // Função para anexar event listeners aos elementos dinâmicos
         function attachListeners() {
-            // Para cada checkbox de meta
-            document.querySelectorAll('#minhas-metas input[type="checkbox"]').forEach((checkbox) => {
+            // Para cada checkbox de meta na lista
+            document.querySelectorAll('#goals-list-container input[type="checkbox"]').forEach((checkbox) => {
                 // Adiciona listener para mudança de estado
                 checkbox.addEventListener('change', () => {
                     // Obtém o índice da meta
@@ -487,12 +633,35 @@
                     if (!checkbox.checked) goals[index].completedAt = null;
                     // Salva no localStorage
                     localStorage.setItem('goals', JSON.stringify(goals));
+                    // Mostra power-up de conclusão se foi marcado
+                    if (checkbox.checked) {
+                        showPowerUp('complete');
+                    }
                     // Renderiza novamente
                     renderGoals();
                 });
             });
-            // Para cada botão de iniciar
-            document.querySelectorAll('.start-btn').forEach(btn => {
+
+            // Para cada checkbox de meta nos cards
+            document.querySelectorAll('#goals-cards-container input[type="checkbox"]').forEach((checkbox) => {
+                checkbox.addEventListener('change', () => {
+                    const index = parseInt(checkbox.dataset.index);
+                    const goals = JSON.parse(localStorage.getItem('goals'));
+                    goals[index].completed = checkbox.checked;
+                    goals[index].started = true;
+                    if (!goals[index].startedAt) goals[index].startedAt = new Date().toISOString();
+                    if (checkbox.checked && !goals[index].completedAt) goals[index].completedAt = new Date().toISOString();
+                    if (!checkbox.checked) goals[index].completedAt = null;
+                    localStorage.setItem('goals', JSON.stringify(goals));
+                    if (checkbox.checked) {
+                        showPowerUp('complete');
+                    }
+                    renderGoals();
+                });
+            });
+
+            // Para cada botão de iniciar na lista
+            document.querySelectorAll('#goals-list-container .start-btn').forEach(btn => {
                 // Adiciona listener para clique
                 btn.addEventListener('click', function() {
                     // Obtém o índice da meta
@@ -505,12 +674,28 @@
                     if (!goals[index].startedAt) goals[index].startedAt = new Date().toISOString();
                     // Salva
                     localStorage.setItem('goals', JSON.stringify(goals));
+                    // Mostra power-up de início
+                    showPowerUp('start');
                     // Renderiza
                     renderGoals();
                 });
             });
-            // Para cada botão de excluir
-            document.querySelectorAll('.delete-btn').forEach(btn => {
+
+            // Para cada botão de iniciar nos cards
+            document.querySelectorAll('#goals-cards-container .start-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = parseInt(this.dataset.index);
+                    const goals = JSON.parse(localStorage.getItem('goals'));
+                    goals[index].started = true;
+                    if (!goals[index].startedAt) goals[index].startedAt = new Date().toISOString();
+                    localStorage.setItem('goals', JSON.stringify(goals));
+                    showPowerUp('start');
+                    renderGoals();
+                });
+            });
+
+            // Para cada botão de excluir na lista
+            document.querySelectorAll('#goals-list-container .delete-btn').forEach(btn => {
                 // Adiciona listener para clique
                 btn.addEventListener('click', function() {
                     // Obtém o índice
@@ -522,6 +707,17 @@
                     // Salva
                     localStorage.setItem('goals', JSON.stringify(goals));
                     // Renderiza
+                    renderGoals();
+                });
+            });
+
+            // Para cada botão de excluir nos cards
+            document.querySelectorAll('#goals-cards-container .delete-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = parseInt(this.dataset.index);
+                    const goals = JSON.parse(localStorage.getItem('goals'));
+                    goals.splice(index, 1);
+                    localStorage.setItem('goals', JSON.stringify(goals));
                     renderGoals();
                 });
             });
@@ -558,6 +754,143 @@
             document.getElementById('progress-bar').value = percentage;
             // Computa as análises
             computeAnalytics(goals);
+            // Verifica conquistas
+            checkAchievements(goals);
+        }
+
+        // Função para verificar conquistas
+        function checkAchievements(goals) {
+            const achievements = JSON.parse(localStorage.getItem('achievements')) || [];
+            const now = new Date();
+            
+            // Conquista: 25 metas concluídas semanalmente
+            const thisWeekStart = getWeekStart(now);
+            const completedThisWeek = goals.filter(g => g.completed && g.completedAt && new Date(g.completedAt) >= thisWeekStart).length;
+            if (completedThisWeek >= 25 && !achievements.includes('weekly-25')) {
+                achievements.push('weekly-25');
+                showAchievement('weekly-25');
+            }
+            
+            // Conquista: 50 metas concluídas semanalmente
+            if (completedThisWeek >= 50 && !achievements.includes('weekly-50')) {
+                achievements.push('weekly-50');
+                showAchievement('weekly-50');
+            }
+            
+            // Conquista: 75 metas concluídas semanalmente
+            if (completedThisWeek >= 75 && !achievements.includes('weekly-75')) {
+                achievements.push('weekly-75');
+                showAchievement('weekly-75');
+            }
+            
+            // Conquista: 25 metas concluídas mensalmente
+            const thisMonthStart = getMonthStart(now);
+            const completedThisMonth = goals.filter(g => g.completed && g.completedAt && new Date(g.completedAt) >= thisMonthStart).length;
+            if (completedThisMonth >= 25 && !achievements.includes('monthly-25')) {
+                achievements.push('monthly-25');
+                showAchievement('monthly-25');
+            }
+            
+            // Conquista: 50 metas concluídas mensalmente
+            if (completedThisMonth >= 50 && !achievements.includes('monthly-50')) {
+                achievements.push('monthly-50');
+                showAchievement('monthly-50');
+            }
+            
+            // Conquista: 75 metas concluídas mensalmente
+            if (completedThisMonth >= 75 && !achievements.includes('monthly-75')) {
+                achievements.push('monthly-75');
+                showAchievement('monthly-75');
+            }
+            
+            // Conquista: 100 metas criadas
+            if (goals.length >= 100 && !achievements.includes('created-100')) {
+                achievements.push('created-100');
+                showAchievement('created-100');
+            }
+            
+            // Conquista: Primeira meta criada
+            if (goals.length >= 1 && !achievements.includes('first-goal')) {
+                achievements.push('first-goal');
+                showAchievement('first-goal');
+            }
+            
+            localStorage.setItem('achievements', JSON.stringify(achievements));
+            renderAchievements(achievements);
+        }
+
+        // Função para mostrar notificação de conquista
+        function showAchievement(achievementId) {
+            const achievementData = {
+                'weekly-25': { title: '🏅 Mestre Semanal', description: '25 metas concluídas nesta semana!' },
+                'weekly-50': { title: '🥇 Campeão Semanal', description: '50 metas concluídas nesta semana!' },
+                'weekly-75': { title: '👑 Rei Semanal', description: '75 metas concluídas nesta semana!' },
+                'monthly-25': { title: '🏅 Mestre Mensal', description: '25 metas concluídas neste mês!' },
+                'monthly-50': { title: '🥇 Campeão Mensal', description: '50 metas concluídas neste mês!' },
+                'monthly-75': { title: '👑 Rei Mensal', description: '75 metas concluídas neste mês!' },
+                'created-100': { title: '🎯 Criador Prolífico', description: '100 metas criadas!' },
+                'first-goal': { title: '🎉 Primeira Meta', description: 'Sua primeira meta foi criada!' }
+            };
+            
+            const data = achievementData[achievementId];
+            if (data) {
+                const notification = document.createElement('div');
+                notification.className = 'achievement-notification';
+                notification.innerHTML = `
+                    <div class="achievement-icon">${data.title.split(' ')[0]}</div>
+                    <div class="achievement-text">
+                        <h4>${data.title}</h4>
+                        <p>${data.description}</p>
+                    </div>
+                `;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.classList.add('show');
+                    setTimeout(() => {
+                        notification.classList.remove('show');
+                        setTimeout(() => notification.remove(), 500);
+                    }, 3000);
+                }, 100);
+            }
+        }
+
+        // Função para renderizar conquistas
+        function renderAchievements(achievements) {
+            const grid = document.getElementById('achievementsGrid');
+            if (!grid) return;
+            
+            const achievementData = {
+                'weekly-25': { icon: '🏅', title: 'Mestre Semanal', desc: '25 metas/semana', color: '#FFD700' },
+                'weekly-50': { icon: '🥇', title: 'Campeão Semanal', desc: '50 metas/semana', color: '#C0C0C0' },
+                'weekly-75': { icon: '👑', title: 'Rei Semanal', desc: '75 metas/semana', color: '#FFD700' },
+                'monthly-25': { icon: '🏅', title: 'Mestre Mensal', desc: '25 metas/mês', color: '#FFD700' },
+                'monthly-50': { icon: '🥇', title: 'Campeão Mensal', desc: '50 metas/mês', color: '#C0C0C0' },
+                'monthly-75': { icon: '👑', title: 'Rei Mensal', desc: '75 metas/mês', color: '#FFD700' },
+                'created-100': { icon: '🎯', title: 'Criador Prolífico', desc: '100 metas criadas', color: '#FF6B6B' },
+                'first-goal': { icon: '🎉', title: 'Primeira Meta', desc: 'Sua primeira meta!', color: '#4ECDC4' }
+            };
+            
+            grid.innerHTML = '';
+            
+            if (achievements.length === 0) {
+                grid.innerHTML = '<p class="no-achievements">Nenhuma conquista desbloqueada ainda. Continue trabalhando nas suas metas! 💪</p>';
+                return;
+            }
+            
+            achievements.forEach(achievement => {
+                const data = achievementData[achievement];
+                if (data) {
+                    const medal = document.createElement('div');
+                    medal.className = 'achievement-medal unlocked';
+                    medal.innerHTML = `
+                        <div class="medal-icon" style="color: ${data.color}">${data.icon}</div>
+                        <h4>${data.title}</h4>
+                        <p>${data.desc}</p>
+                    `;
+                    grid.appendChild(medal);
+                }
+            });
         }
 
         // Função para formatar datas
@@ -750,6 +1083,21 @@
             const isCollapsedInit = document.body.classList.contains('sidebar-collapsed');
             iconSpanInit.textContent = isCollapsedInit ? '▶' : '☰';
         }
+
+        // Event listeners para toggle de visualização
+        document.getElementById('list-view').addEventListener('click', () => {
+            document.getElementById('goals-list-container').style.display = 'block';
+            document.getElementById('goals-cards-container').style.display = 'none';
+            document.getElementById('list-view').classList.add('active');
+            document.getElementById('cards-view').classList.remove('active');
+        });
+
+        document.getElementById('cards-view').addEventListener('click', () => {
+            document.getElementById('goals-list-container').style.display = 'none';
+            document.getElementById('goals-cards-container').style.display = 'block';
+            document.getElementById('cards-view').classList.add('active');
+            document.getElementById('list-view').classList.remove('active');
+        });
 
         // Event listeners para filtros
         document.getElementById('filter-status').addEventListener('change', renderGoals);
