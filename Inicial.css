@@ -64,6 +64,32 @@ header h1 {
 header h1::before {
     content: "🎯 ";
 }
+
+.emotional-message {
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    text-align: center;
+    transition: background-color 0.3s ease;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.emotional-motivado {
+    background-color: rgba(76, 175, 80, 0.2);
+    color: #81c784;
+}
+
+.emotional-neutro {
+    background-color: rgba(33, 150, 243, 0.2);
+    color: #64b5f6;
+}
+
+.emotional-dificuldade {
+    background-color: rgba(255, 152, 0, 0.2);
+    color: #ffb74d;
+}
 /* Estilos para a sidebar */
 .sidebar {
     /* Posicionamento fixo */
@@ -341,36 +367,41 @@ form {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    max-width: 600px;
+    max-width: 800px;
     margin: 0 auto;
 }
 
-form > * {
+.form-row {
     display: flex;
-    align-items: center;
     gap: 0.5rem;
+    align-items: flex-start;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 0.2rem;
 }
 
 form label {
-    min-width: 150px;
     font-weight: bold;
     color: #b0b0b0;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
 }
 
 form input, form select, form textarea {
-    flex: 1;
-    padding: 0.5rem;
+    padding: 0.4rem;
     border: 1px solid #555;
     border-radius: 6px;
     background-color: #1a1a2e;
     color: #e0e0e0;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
 }
 
 form textarea {
     resize: vertical;
-    min-height: 60px;
+    min-height: 50px;
 }
 
 /* Calendário Meta Track */
@@ -492,6 +523,45 @@ form textarea {
     font-size: 0.82rem;
     margin-bottom: 0.35rem;
     color: #cfb9ff;
+}
+
+.diary-section {
+    margin-top: 1rem;
+    border-top: 1px solid #555;
+    padding-top: 0.5rem;
+}
+
+.diary-section h4 {
+    margin: 0 0 0.5rem;
+    font-size: 0.9rem;
+    color: #e0e0e0;
+}
+
+.diary-entry {
+    margin-bottom: 0.5rem;
+}
+
+.diary-entry label {
+    display: block;
+    font-size: 0.8rem;
+    color: #cfb9ff;
+    margin-bottom: 0.25rem;
+}
+
+.diary-entry textarea {
+    width: 100%;
+    background-color: #1a1a2e;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 0.25rem;
+    font-size: 0.8rem;
+    resize: vertical;
+}
+
+.diary-entry textarea:focus {
+    outline: none;
+    border-color: #8a2be2;
 }
 
 .calendar-tooltip {
@@ -632,6 +702,76 @@ li input[type="checkbox"] {
 li label {
     /* Ocupa espaço restante */
     flex: 1;
+}
+
+/* Modo Foco Styles */
+.focus-mode-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.95);
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.focus-mode-overlay.show {
+    opacity: 1;
+}
+
+.focus-mode-content {
+    text-align: center;
+    color: white;
+    max-width: 600px;
+    padding: 2rem;
+}
+
+.focus-mode-content h2 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    color: #e0e0e0;
+}
+
+.pomodoro-timer {
+    font-size: 5rem;
+    font-weight: bold;
+    margin: 2rem 0;
+    color: #4ecdc4;
+    font-family: monospace;
+    text-shadow: 0 0 20px rgba(78, 205, 196, 0.5);
+}
+
+.focus-mode-controls {
+    margin-top: 2rem;
+}
+
+.focus-btn {
+    background-color: #8a2be2;
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    margin: 0 0.5rem;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.focus-btn:hover {
+    background-color: #6a1bb8;
+}
+
+.exit-btn {
+    background-color: #ff6b6b;
+}
+
+.exit-btn:hover {
+    background-color: #e55a5a;
 }
 
 /* Títulos h3 dentro de li */

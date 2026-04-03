@@ -42,32 +42,53 @@
                 <h2>Adicionar Nova Meta</h2>
             <!-- Formulário para adicionar meta, chama função addGoal ao submeter -->
             <form onsubmit="addGoal(event)">
-                <!-- Campo de título -->
-                <label for="titulo-meta">Título da Meta:</label>
-                <input type="text" id="titulo-meta" name="titulo-meta" required>
+                <!-- Linha 1: Título e Descrição -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="titulo-meta">Título da Meta:</label>
+                        <input type="text" id="titulo-meta" name="titulo-meta" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="descricao-meta">Descrição:</label>
+                        <textarea id="descricao-meta" name="descricao-meta" rows="2"></textarea>
+                    </div>
+                </div>
 
-                <!-- Campo de descrição -->
-                <label for="descricao-meta">Descrição:</label>
-                <textarea id="descricao-meta" name="descricao-meta" rows="3"></textarea>
+                <!-- Linha 2: Categoria, Prioridade, Nível de Foco -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="categoria-meta">Categoria:</label>
+                        <input type="text" id="categoria-meta" name="categoria-meta" placeholder="Ex: Pessoal, Trabalho, Saúde">
+                    </div>
+                    <div class="form-group">
+                        <label for="prioridade-meta">Prioridade:</label>
+                        <select id="prioridade-meta" name="prioridade-meta">
+                            <option value="baixa">Baixa</option>
+                            <option value="media" selected>Média</option>
+                            <option value="alta">Alta</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="nivel-foco">Nível de Foco:</label>
+                        <select id="nivel-foco" name="nivel-foco">
+                            <option value="1">1 - 15 min</option>
+                            <option value="2" selected>2 - 25 min</option>
+                            <option value="3">3 - 45 min</option>
+                        </select>
+                    </div>
+                </div>
 
-                <!-- Campo de categoria -->
-                <label for="categoria-meta">Categoria:</label>
-                <input type="text" id="categoria-meta" name="categoria-meta" placeholder="Ex: Pessoal, Trabalho, Saúde">
-
-                <!-- Campo de prioridade -->
-                <label for="prioridade-meta">Prioridade:</label>
-                <select id="prioridade-meta" name="prioridade-meta">
-                    <option value="baixa">Baixa</option>
-                    <option value="media" selected>Média</option>
-                    <option value="alta">Alta</option>
-                </select>
-
-                <!-- Campo de data -->
-                <label for="data-limite">Data Limite:</label>
-                <input type="date" id="data-limite" name="data-limite">
-
-                <!-- Botão para submeter -->
-                <button type="submit" class="full-width">Adicionar Meta</button>
+                <!-- Linha 3: Data e Botão -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="data-limite">Data Limite:</label>
+                        <input type="date" id="data-limite" name="data-limite">
+                    </div>
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <button type="submit">Adicionar Meta</button>
+                    </div>
+                </div>
             </form>
         </section>
 
@@ -95,7 +116,12 @@
             <div id="calendarDetails" class="calendar-details" aria-live="polite">
                 <h3>Metas do dia</h3>
                 <ul id="calendarGoalsList"></ul>
+                <div id="diarySection" class="diary-section" style="display: none;">
+                    <h4>Diário de Progresso</h4>
+                    <div id="diaryEntries"></div>
+                </div>
             </div>
+            <div id="emotional-message" class="emotional-message"></div>
         </aside>
         </div>
 
@@ -199,6 +225,18 @@
 
     <!-- Power-up container -->
     <div id="powerUpContainer"></div>
+
+    <!-- Modo Foco Overlay -->
+    <div id="focusModeOverlay" class="focus-mode-overlay" style="display: none;">
+        <div class="focus-mode-content">
+            <h2 id="focusGoalTitle">Título da Meta</h2>
+            <div id="pomodoroTimer" class="pomodoro-timer">25:00</div>
+            <div class="focus-mode-controls">
+                <button id="pauseResumeBtn" class="focus-btn">Pausar</button>
+                <button id="exitFocusBtn" class="focus-btn exit-btn">Sair do Modo Foco</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Rodapé da página -->
     <footer>
@@ -306,22 +344,41 @@
         function showDayGoals(goals, dateText) {
             const details = document.getElementById('calendarGoalsList');
             const title = document.querySelector('#calendarDetails h3');
-            if (!details || !title) return;
+            const diarySection = document.getElementById('diarySection');
+            const diaryEntries = document.getElementById('diaryEntries');
+            if (!details || !title || !diarySection || !diaryEntries) return;
 
             title.textContent = goals.length > 0 ? `Metas de ${dateText}` : `Nenhuma meta em ${dateText}`;
             details.innerHTML = '';
+            diaryEntries.innerHTML = '';
 
             if (goals.length === 0) {
                 const li = document.createElement('li');
                 li.textContent = 'Sem metas cadastradas';
                 details.appendChild(li);
+                diarySection.style.display = 'none';
                 return;
             }
 
-            goals.forEach((goal) => {
+            diarySection.style.display = 'block';
+
+            goals.forEach((goal, index) => {
                 const li = document.createElement('li');
                 li.textContent = `${goal.title} – ${goal.description || 'sem descrição'}`;
                 details.appendChild(li);
+
+                // Adicionar entrada de diário para cada meta
+                const diaryEntry = document.createElement('div');
+                diaryEntry.className = 'diary-entry';
+                diaryEntry.innerHTML = `
+                    <label for="diary-${index}">${goal.title}:</label>
+                    <textarea id="diary-${index}" rows="3" placeholder="Escreva sobre seu progresso hoje...">${getDiaryNote(dateText, goal.title) || ''}</textarea>
+                `;
+                diaryEntries.appendChild(diaryEntry);
+
+                // Salvar automaticamente ao sair do campo
+                const textarea = diaryEntry.querySelector('textarea');
+                textarea.addEventListener('blur', () => saveDiaryNote(dateText, goal.title, textarea.value));
             });
         }
 
@@ -451,6 +508,18 @@
             }
         }
 
+        // Funções para diário de progresso
+        function getDiaryNote(dateText, goalTitle) {
+            const diary = JSON.parse(localStorage.getItem('diary')) || {};
+            return diary[`${dateText}-${goalTitle}`] || '';
+        }
+
+        function saveDiaryNote(dateText, goalTitle, note) {
+            const diary = JSON.parse(localStorage.getItem('diary')) || {};
+            diary[`${dateText}-${goalTitle}`] = note;
+            localStorage.setItem('diary', JSON.stringify(diary));
+        }
+
         // Função para adicionar uma nova meta
         function addGoal(event) {
             // Previne o comportamento padrão do formulário
@@ -461,10 +530,11 @@
             const date = document.getElementById('data-limite').value;
             const prioridade = document.getElementById('prioridade-meta').value;
             const categoria = document.getElementById('categoria-meta').value;
+            const nivelFoco = parseInt(document.getElementById('nivel-foco').value);
             // Recupera as metas existentes do localStorage
             const goals = JSON.parse(localStorage.getItem('goals')) || [];
             // Adiciona a nova meta ao array
-            goals.push({ title, description, date, prioridade, categoria, completed: false, started: false, startedAt: null, completedAt: null });
+            goals.push({ title, description, date, prioridade, categoria, nivelFoco, completed: false, started: false, startedAt: null, completedAt: null });
             // Salva o array atualizado no localStorage
             localStorage.setItem('goals', JSON.stringify(goals));
             // Renderiza as metas novamente
@@ -475,6 +545,7 @@
             document.getElementById('data-limite').value = '';
             document.getElementById('prioridade-meta').value = 'media';
             document.getElementById('categoria-meta').value = '';
+            document.getElementById('nivel-foco').value = '2';
             
         }
 
@@ -575,6 +646,7 @@
                             <input type="checkbox" id="meta${filteredIndex}" data-index="${item.originalIndex}" ${item.completed ? 'checked' : ''}>
                             <label for="meta${filteredIndex}">Concluída</label>
                             ${!item.started ? `<button class="start-btn" data-index="${item.originalIndex}">Iniciar</button>` : ''}
+                            <button class="focus-btn" data-title="${item.title}" data-nivel="${item.nivelFoco || 2}">Modo Foco</button>
                             <button class="delete-btn" data-index="${item.originalIndex}">Excluir</button>
                         </div>
                     </div>
@@ -606,6 +678,7 @@
                         <input type="checkbox" class="goal-card-checkbox" id="card-meta${filteredIndex}" data-index="${item.originalIndex}" ${item.completed ? 'checked' : ''}>
                         <label for="card-meta${filteredIndex}">✓</label>
                         ${!item.started ? `<button class="start-btn" data-index="${item.originalIndex}">▶</button>` : ''}
+                        <button class="focus-btn" data-title="${item.title}" data-nivel="${item.nivelFoco || 2}">🎯</button>
                         <button class="delete-btn" data-index="${item.originalIndex}">🗑️</button>
                     </div>
                 `;
@@ -639,6 +712,8 @@
                     }
                     // Renderiza novamente
                     renderGoals();
+                    // Atualiza estatísticas emocionais
+                    updateUserStats();
                 });
             });
 
@@ -657,6 +732,7 @@
                         showPowerUp('complete');
                     }
                     renderGoals();
+                    updateUserStats();
                 });
             });
 
@@ -678,6 +754,8 @@
                     showPowerUp('start');
                     // Renderiza
                     renderGoals();
+                    // Atualiza estatísticas emocionais
+                    updateUserStats();
                 });
             });
 
@@ -691,6 +769,7 @@
                     localStorage.setItem('goals', JSON.stringify(goals));
                     showPowerUp('start');
                     renderGoals();
+                    updateUserStats();
                 });
             });
 
@@ -736,6 +815,17 @@
                     }
                 });
             });
+
+            // Para cada botão de modo foco
+            document.querySelectorAll('.focus-btn').forEach(btn => {
+                if (btn.textContent !== 'Pausar' && btn.textContent !== 'Retomar' && btn.textContent !== 'Sair do Modo Foco') {
+                    btn.addEventListener('click', function() {
+                        const goalTitle = this.dataset.title;
+                        const nivelFoco = parseInt(this.dataset.nivel) || 2;
+                        startFocusMode(goalTitle, nivelFoco);
+                    });
+                }
+            });
         }
 
         // Função para atualizar o progresso geral
@@ -758,7 +848,7 @@
             checkAchievements(goals);
         }
 
-        // Função para verificar conquistas
+        // Função VERIFICAR CONQUISTAS 
         function checkAchievements(goals) {
             const achievements = JSON.parse(localStorage.getItem('achievements')) || [];
             const now = new Date();
@@ -1064,8 +1154,8 @@
         if (!localStorage.getItem('goals')) {
             // Se não há metas salvas, cria metas iniciais
             const initialGoals = [
-                { title: 'Meta 1: Aprender HTML', description: 'Estudar os fundamentos do HTML.', date: '2026-04-01', prioridade: 'alta', categoria: 'Educação', completed: false, started: false, startedAt: null, completedAt: null },
-                { title: 'Meta 2: Exercitar diariamente', description: 'Fazer exercícios físicos todos os dias.', date: '2026-12-31', prioridade: 'media', categoria: 'Saúde', completed: true, started: true, startedAt: '2026-01-10T00:00:00.000Z', completedAt: '2026-01-20T00:00:00.000Z' }
+                { title: 'Meta 1: Aprender HTML', description: 'Estudar os fundamentos do HTML.', date: '2026-04-01', prioridade: 'alta', categoria: 'Educação', nivelFoco: 2, completed: false, started: false, startedAt: null, completedAt: null },
+                { title: 'Meta 2: Exercitar diariamente', description: 'Fazer exercícios físicos todos os dias.', date: '2026-12-31', prioridade: 'media', categoria: 'Saúde', nivelFoco: 1, completed: true, started: true, startedAt: '2026-01-10T00:00:00.000Z', completedAt: '2026-01-20T00:00:00.000Z' }
             ];
             // Salva as metas iniciais
             localStorage.setItem('goals', JSON.stringify(initialGoals));
@@ -1104,6 +1194,221 @@
         document.getElementById('filter-prioridade').addEventListener('change', renderGoals);
         document.getElementById('filter-categoria').addEventListener('input', renderGoals);
         document.getElementById('sort-date').addEventListener('change', renderGoals);
+
+        // SISTEMA EMOCIONAL INTELIGENTE
+        // Função para obter o estado emocional baseado nas estatísticas
+        function getEmotionalState(stats) {
+            const { completedToday, missedToday, streak } = stats;
+            if (streak >= 7 || (completedToday > missedToday && streak >= 3)) {
+                return 'motivado';
+            } else if (missedToday > completedToday * 2 || streak === 0) {
+                return 'dificuldade';
+            } else {
+                return 'neutro';
+            }
+        }
+
+        // Função para obter mensagem emocional personalizada
+        function getEmotionalMessage(stats, userName = 'Você') {
+            const state = getEmotionalState(stats);
+            const { completedToday, missedToday, streak } = stats;
+
+            switch (state) {
+                case 'motivado':
+                    if (streak >= 10) {
+                        return `🎉 ${userName}, você está arrasando! Sequência de ${streak} dias produtivos. Continue brilhando! ✨`;
+                    } else {
+                        return `🔥 ${userName}, você está no fogo! Sequência de ${streak} dias. Mantenha o ritmo! 💪`;
+                    }
+                case 'neutro':
+                    return `💙 ${userName}, você está indo bem. Lembre-se: cada passo conta. 🌱`;
+                case 'dificuldade':
+                    if (missedToday > 0) {
+                        return `💙 ${userName}, está tudo bem errar às vezes. Amanhã é um novo dia para recomeçar. 🌟`;
+                    } else {
+                        return `💙 ${userName}, respire fundo. Pequenos progressos levam a grandes conquistas. ✨`;
+                    }
+                default:
+                    return `💙 ${userName}, continue focado em suas metas. Você consegue! 🌱`;
+            }
+        }
+
+        // Função para calcular estatísticas do usuário
+        function calculateUserStats() {
+            const goals = JSON.parse(localStorage.getItem('goals')) || [];
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            let completedToday = 0;
+            let missedToday = 0;
+            let streak = 0;
+            let lastActive = new Date(localStorage.getItem('lastActive') || today);
+
+            // Calcular metas concluídas e perdidas hoje
+            goals.forEach(goal => {
+                if (goal.completed && goal.completedAt) {
+                    const completedDate = new Date(goal.completedAt);
+                    completedDate.setHours(0, 0, 0, 0);
+                    if (completedDate.getTime() === today.getTime()) {
+                        completedToday++;
+                    }
+                }
+                if (!goal.completed && goal.date) {
+                    const dueDate = new Date(goal.date);
+                    dueDate.setHours(0, 0, 0, 0);
+                    if (dueDate.getTime() < today.getTime()) {
+                        missedToday++;
+                    }
+                }
+            });
+
+            // Calcular streak (dias consecutivos com pelo menos uma meta concluída)
+            const streakData = JSON.parse(localStorage.getItem('streakData')) || { current: 0, lastDate: null };
+            const lastStreakDate = streakData.lastDate ? new Date(streakData.lastDate) : null;
+            lastStreakDate?.setHours(0, 0, 0, 0);
+
+            if (completedToday > 0) {
+                if (lastStreakDate && (today.getTime() - lastStreakDate.getTime()) === 86400000) {
+                    streak = streakData.current + 1;
+                } else if (!lastStreakDate || (today.getTime() - lastStreakDate.getTime()) > 86400000) {
+                    streak = 1;
+                } else {
+                    streak = streakData.current;
+                }
+            } else {
+                streak = 0; // Reset streak se não completou nada hoje
+            }
+
+            return { completedToday, missedToday, streak, lastActive };
+        }
+
+        // Função para atualizar estatísticas e interface
+        function updateUserStats(userName = 'Você') {
+            const stats = calculateUserStats();
+            const state = getEmotionalState(stats);
+            const message = getEmotionalMessage(stats, userName);
+
+            // Salvar dados no localStorage
+            localStorage.setItem('userStats', JSON.stringify(stats));
+            localStorage.setItem('lastActive', new Date().toISOString());
+            localStorage.setItem('streakData', JSON.stringify({ current: stats.streak, lastDate: new Date().toISOString() }));
+
+            // Atualizar interface
+            const messageElement = document.getElementById('emotional-message');
+            if (messageElement) {
+                messageElement.textContent = message;
+                messageElement.className = `emotional-message emotional-${state}`;
+            }
+        }
+
+        // Inicializar sistema emocional
+        updateUserStats();
+
+        // Sistema de Modo Foco com Pomodoro
+        let pomodoroInterval = null;
+        let pomodoroTime = 25 * 60; // 25 minutos em segundos
+        let isPaused = false;
+
+        // Função para iniciar o modo foco
+        function startFocusMode(goalTitle, nivelFoco = 2) {
+            const overlay = document.getElementById('focusModeOverlay');
+            const titleElement = document.getElementById('focusGoalTitle');
+            
+            titleElement.textContent = goalTitle;
+            overlay.style.display = 'flex';
+            
+            // Adicionar classe para transição
+            setTimeout(() => {
+                overlay.classList.add('show');
+            }, 10);
+            
+            // Ajustar tempo baseado no nível de foco
+            switch (nivelFoco) {
+                case 1:
+                    pomodoroTime = 15 * 60; // 15 minutos
+                    break;
+                case 2:
+                    pomodoroTime = 25 * 60; // 25 minutos
+                    break;
+                case 3:
+                    pomodoroTime = 45 * 60; // 45 minutos
+                    break;
+                default:
+                    pomodoroTime = 25 * 60;
+            }
+            
+            // Iniciar Pomodoro
+            startPomodoro();
+            
+            // Event listeners para os botões
+            document.getElementById('exitFocusBtn').onclick = exitFocusMode;
+            document.getElementById('pauseResumeBtn').onclick = togglePauseResume;
+        }
+
+        // Função para sair do modo foco
+        function exitFocusMode() {
+            const overlay = document.getElementById('focusModeOverlay');
+            
+            overlay.classList.remove('show');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 300);
+            
+            // Parar o timer
+            if (pomodoroInterval) {
+                clearInterval(pomodoroInterval);
+                pomodoroInterval = null;
+            }
+            
+            // Resetar estado
+            pomodoroTime = 25 * 60;
+            isPaused = false;
+            updateTimerDisplay();
+        }
+
+        // Função para iniciar o timer Pomodoro
+        function startPomodoro() {
+            if (pomodoroInterval) {
+                clearInterval(pomodoroInterval);
+            }
+            
+            pomodoroInterval = setInterval(() => {
+                if (!isPaused) {
+                    pomodoroTime--;
+                    updateTimerDisplay();
+                    
+                    if (pomodoroTime <= 0) {
+                        // Tempo acabou
+                        clearInterval(pomodoroInterval);
+                        pomodoroInterval = null;
+                        showToast('🎉 Tempo de foco concluído! Parabéns!');
+                        // Opcional: tocar som
+                        // playCompletionSound();
+                    }
+                }
+            }, 1000);
+        }
+
+        // Função para atualizar o display do timer
+        function updateTimerDisplay() {
+            const minutes = Math.floor(pomodoroTime / 60);
+            const seconds = pomodoroTime % 60;
+            const timerElement = document.getElementById('pomodoroTimer');
+            
+            timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Função para pausar/retomar
+        function togglePauseResume() {
+            isPaused = !isPaused;
+            const btn = document.getElementById('pauseResumeBtn');
+            btn.textContent = isPaused ? 'Retomar' : 'Pausar';
+        }
+
+        // Função opcional para tocar som (não implementada pois requer arquivo de áudio)
+        // function playCompletionSound() {
+        //     // Implementar se houver arquivo de som
+        // }
     </script>
 </body>
 </html>
