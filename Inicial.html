@@ -6,33 +6,30 @@
     <title>Meta Track</title>
     <link rel="stylesheet" href="Inicial.css">
 </head>
-<body class="sidebar-collapsed">
+<body>
     <header class="header">
         <div class="logo-container">
-            <img src="2logo-removebg-preview.png" alt="Logo" class="logo">
+            <img src="main/2logo-removebg-preview.png" alt="Logo" class="logo">
         </div>
-    </header>
-    <!-- Barra lateral retrátil para navegação -->
-    <aside class="sidebar collapsed" id="sidebar">
-        <!-- Botão para alternar o estado da barra lateral -->
-        <button id="sidebarToggle" class="sidebar-toggle" aria-label="Abrir ou fechar menu">
-            <span class="hamburger-icon">▶</span>
-        </button>
-        <!-- Navegação com links para seções da página -->
-        <nav>
-            <!-- Lista não ordenada de links -->
+        <nav class="main-nav">
             <ul>
-                <!-- Link para a seção de adicionar meta -->
-                <li><a href="#adicionar-meta"><span class="nav-text">Adicionar Meta</span></a></li>
-                <!-- Link para a seção de minhas metas -->
-                <li><a href="#minhas-metas"><span class="nav-text">Minhas Metas</span></a></li>
-                <!-- Link para a seção de progresso -->
-                <li><a href="#progresso"><span class="nav-text">Progresso</span></a></li>
-                <!-- Link para a seção de dashboard -->
-                <li><a href="#dashboard"><span class="nav-text">Dashboard</span></a></li>
+                <li><a href="#adicionar-meta">Adicionar Meta</a></li>
+                <li><a href="#minhas-metas">Minhas Metas</a></li>
+                <li><a href="#progresso">Progresso</a></li>
+                <li><a href="#dashboard">Dashboard</a></li>
             </ul>
         </nav>
-    </aside>
+        <div class="auth-section">
+            <div id="auth-links">
+                <a href="login.html" class="auth-link">Login</a>
+                <a href="cadastro.html" class="auth-link">Cadastro</a>
+            </div>
+            <div id="user-info" style="display: none;">
+                <span id="user-name"></span>
+                <button onclick="logoutUser()" class="logout-btn">Sair</button>
+            </div>
+        </div>
+    </header>
 
     <!-- Conteúdo principal da página -->
     <main>
@@ -523,6 +520,16 @@
 
         // Função para adicionar uma nova meta
         function addGoal(event) {
+            // Verificar se usuário está logado
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (!currentUser) {
+                showToast('Você precisa fazer login para adicionar metas!');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1000);
+                return;
+            }
+
             // Previne o comportamento padrão do formulário
             if (event) event.preventDefault();
             // Obtém os valores dos campos do formulário
@@ -1135,22 +1142,6 @@
             });
         }
 
-        // Event listener para o botão de toggle da sidebar
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        sidebarToggle.addEventListener('click', () => {
-            // Alterna a classe 'sidebar-collapsed' no body
-            document.body.classList.toggle('sidebar-collapsed');
-            // Alterna a classe 'collapsed' na sidebar
-            document.getElementById('sidebar').classList.toggle('collapsed');
-            // Verifica se está colapsada
-            const isCollapsed = document.body.classList.contains('sidebar-collapsed');
-            // Muda o ícone do botão (mantém o span do hambúrguer)
-            const iconSpan = sidebarToggle.querySelector('.hamburger-icon');
-            if (iconSpan) {
-                iconSpan.textContent = isCollapsed ? '▶' : '☰';
-            }
-        });
-
         // Inicialização
         if (!localStorage.getItem('goals')) {
             // Se não há metas salvas, cria metas iniciais
@@ -1167,13 +1158,6 @@
 
         // Renderiza as metas na inicialização
         renderGoals();
-
-        // Ajusta o ícone do toggle de acordo com o estado inicial
-        const iconSpanInit = document.querySelector('#sidebarToggle .hamburger-icon');
-        if (iconSpanInit) {
-            const isCollapsedInit = document.body.classList.contains('sidebar-collapsed');
-            iconSpanInit.textContent = isCollapsedInit ? '▶' : '☰';
-        }
 
         // Event listeners para toggle de visualização
         document.getElementById('list-view').addEventListener('click', () => {
@@ -1410,6 +1394,35 @@
         // function playCompletionSound() {
         //     // Implementar se houver arquivo de som
         // }
+
+        // Funções de autenticação
+        function initAuth() {
+            checkLoggedInUser();
+        }
+
+        function logoutUser() {
+            localStorage.removeItem('currentUser');
+            checkLoggedInUser();
+        }
+
+        function checkLoggedInUser() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            const authLinks = document.getElementById('auth-links');
+            const userInfo = document.getElementById('user-info');
+            const userName = document.getElementById('user-name');
+
+            if (currentUser) {
+                authLinks.style.display = 'none';
+                userInfo.style.display = 'flex';
+                userName.textContent = `Olá, ${currentUser.name}`;
+            } else {
+                authLinks.style.display = 'flex';
+                userInfo.style.display = 'none';
+            }
+        }
+
+        // Inicializar autenticação quando a página carrega
+        document.addEventListener('DOMContentLoaded', initAuth);
     </script>
 </body>
 </html>

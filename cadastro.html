@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - Meta Track</title>
+    <link rel="stylesheet" href="Inicial.css">
+</head>
+<body>
+    <div class="auth-page">
+        <div class="auth-container">
+            <h2>Cadastro</h2>
+            <form onsubmit="registerUser(event)">
+                <div class="form-group">
+                    <label for="register-name">Nome:</label>
+                    <input type="text" id="register-name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-email">Email:</label>
+                    <input type="email" id="register-email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Senha:</label>
+                    <input type="password" id="register-password" name="password" required>
+                </div>
+                <button type="submit">Cadastrar</button>
+            </form>
+            <p>Já tem conta? <a href="login.html">Faça login</a></p>
+            <p><a href="Inicial.html">Voltar ao início</a></p>
+        </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script>
+        // Função de mostrar toast
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2300);
+        }
+
+        function registerUser(event) {
+            event.preventDefault();
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            if (users.find(user => user.email === email)) {
+                showToast('Email já cadastrado!');
+                return;
+            }
+
+            users.push({ name, email, password });
+            localStorage.setItem('users', JSON.stringify(users));
+            localStorage.setItem('currentUser', JSON.stringify({ name, email }));
+
+            showToast('Usuário cadastrado com sucesso!');
+            setTimeout(() => {
+                window.location.href = 'Inicial.html';
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
