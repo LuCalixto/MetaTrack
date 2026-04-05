@@ -520,6 +520,9 @@
 
         // Função para adicionar uma nova meta
         function addGoal(event) {
+            // Previne o comportamento padrão do formulário primeiro
+            if (event) event.preventDefault();
+
             // Verificar se usuário está logado
             const currentUser = JSON.parse(localStorage.getItem('currentUser'));
             if (!currentUser) {
@@ -530,8 +533,6 @@
                 return;
             }
 
-            // Previne o comportamento padrão do formulário
-            if (event) event.preventDefault();
             // Obtém os valores dos campos do formulário
             const title = document.getElementById('titulo-meta').value;
             const description = document.getElementById('descricao-meta').value;
@@ -557,6 +558,33 @@
             
         }
 
+        // Função utilitária para recuperar o usuário atual
+        function getCurrentUser() {
+            return JSON.parse(localStorage.getItem('currentUser'));
+        }
+
+        function showNotLoggedInState() {
+            // Não esconder seções, deixar layout visível
+            // const hiddenIds = ['adicionar-meta', 'calendar-widget', 'minhas-metas', 'progresso', 'dashboard'];
+            // hiddenIds.forEach(id => {
+            //     const element = document.getElementById(id);
+            //     if (element) element.style.display = 'none';
+            // });
+            // const message = document.getElementById('not-logged-message');
+            // if (message) message.style.display = 'block';
+        }
+
+        function showLoggedInState() {
+            // Não mostrar/ocultar seções, deixar sempre visível
+            // const visibleIds = ['adicionar-meta', 'calendar-widget', 'minhas-metas', 'progresso', 'dashboard'];
+            // visibleIds.forEach(id => {
+            //     const element = document.getElementById(id);
+            //     if (element) element.style.display = '';
+            // });
+            // const message = document.getElementById('not-logged-message');
+            // if (message) message.style.display = 'none';
+        }
+
         // Função para determinar o status de uma meta
         function getStatus(goal) {
             // Se a meta estiver concluída, retorna 'Concluída'
@@ -579,6 +607,13 @@
 
         // Função para renderizar as metas na página
         function renderGoals() {
+            // Sempre renderizar metas, independente de login
+            // const currentUser = getCurrentUser();
+            // if (!currentUser) {
+            //     showNotLoggedInState();
+            //     return;
+            // }
+
             // Recupera as metas do localStorage
             const allGoals = JSON.parse(localStorage.getItem('goals')) || [];
 
@@ -703,7 +738,7 @@
                     // Obtém o índice da meta
                     const index = parseInt(checkbox.dataset.index);
                     // Recupera as metas
-                    const goals = JSON.parse(localStorage.getItem('goals'));
+                    const goals = JSON.parse(localStorage.getItem('goals')) || [];
                     // Atualiza o status de concluída
                     goals[index].completed = checkbox.checked;
                     // Define como iniciada
@@ -729,7 +764,7 @@
             document.querySelectorAll('#goals-cards-container input[type="checkbox"]').forEach((checkbox) => {
                 checkbox.addEventListener('change', () => {
                     const index = parseInt(checkbox.dataset.index);
-                    const goals = JSON.parse(localStorage.getItem('goals'));
+                    const goals = JSON.parse(localStorage.getItem('goals')) || [];
                     goals[index].completed = checkbox.checked;
                     goals[index].started = true;
                     if (!goals[index].startedAt) goals[index].startedAt = new Date().toISOString();
@@ -751,7 +786,7 @@
                     // Obtém o índice da meta
                     const index = parseInt(this.dataset.index);
                     // Recupera as metas
-                    const goals = JSON.parse(localStorage.getItem('goals'));
+                    const goals = JSON.parse(localStorage.getItem('goals')) || [];
                     // Define como iniciada
                     goals[index].started = true;
                     // Define timestamp se necessário
@@ -771,7 +806,7 @@
             document.querySelectorAll('#goals-cards-container .start-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const index = parseInt(this.dataset.index);
-                    const goals = JSON.parse(localStorage.getItem('goals'));
+                    const goals = JSON.parse(localStorage.getItem('goals')) || [];
                     goals[index].started = true;
                     if (!goals[index].startedAt) goals[index].startedAt = new Date().toISOString();
                     localStorage.setItem('goals', JSON.stringify(goals));
@@ -788,7 +823,7 @@
                     // Obtém o índice
                     const index = parseInt(this.dataset.index);
                     // Recupera as metas
-                    const goals = JSON.parse(localStorage.getItem('goals'));
+                    const goals = JSON.parse(localStorage.getItem('goals')) || [];
                     // Remove a meta do array
                     goals.splice(index, 1);
                     // Salva
@@ -802,7 +837,7 @@
             document.querySelectorAll('#goals-cards-container .delete-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const index = parseInt(this.dataset.index);
-                    const goals = JSON.parse(localStorage.getItem('goals'));
+                    const goals = JSON.parse(localStorage.getItem('goals')) || [];
                     goals.splice(index, 1);
                     localStorage.setItem('goals', JSON.stringify(goals));
                     renderGoals();
@@ -838,7 +873,7 @@
 
         // Função para atualizar o progresso geral
         function updateProgress() {
-            // Recupera as metas
+            // Recupera as metas do localStorage
             const goals = JSON.parse(localStorage.getItem('goals')) || [];
             // Conta o total de metas
             const total = goals.length;
@@ -917,7 +952,7 @@
             renderAchievements(achievements);
         }
 
-        // Função para mostrar notificação de conquista
+        // Função para formatar datas
         function showAchievement(achievementId) {
             const achievementData = {
                 'weekly-25': { title: '🏅 Mestre Semanal', description: '25 metas concluídas nesta semana!' },
@@ -1142,16 +1177,6 @@
             });
         }
 
-        // Inicialização
-        if (!localStorage.getItem('goals')) {
-            // Se não há metas salvas, cria metas iniciais
-            const initialGoals = [
-                { title: 'Meta 1: Aprender HTML', description: 'Estudar os fundamentos do HTML.', date: '2026-04-01', prioridade: 'alta', categoria: 'Educação', nivelFoco: 2, completed: false, started: false, startedAt: null, completedAt: null },
-                { title: 'Meta 2: Exercitar diariamente', description: 'Fazer exercícios físicos todos os dias.', date: '2026-12-31', prioridade: 'media', categoria: 'Saúde', nivelFoco: 1, completed: true, started: true, startedAt: '2026-01-10T00:00:00.000Z', completedAt: '2026-01-20T00:00:00.000Z' }
-            ];
-            // Salva as metas iniciais
-            localStorage.setItem('goals', JSON.stringify(initialGoals));
-        }
         // Inicialização do calendário e filtros
         setupCalendarControls();
         renderCalendar();
@@ -1227,7 +1252,7 @@
             let completedToday = 0;
             let missedToday = 0;
             let streak = 0;
-            let lastActive = new Date(localStorage.getItem('lastActive') || today);
+            let lastActive = new Date(localStorage.getItem('lastActive') || today.toISOString());
 
             // Calcular metas concluídas e perdidas hoje
             goals.forEach(goal => {
@@ -1286,8 +1311,11 @@
             }
         }
 
-        // Inicializar sistema emocional
-        updateUserStats();
+        // Inicializar sistema emocional somente se houver usuário logado
+        const currentUser = getCurrentUser();
+        if (currentUser) {
+            updateUserStats(currentUser.name);
+        }
 
         // Sistema de Modo Foco com Pomodoro
         let pomodoroInterval = null;
@@ -1415,9 +1443,11 @@
                 authLinks.style.display = 'none';
                 userInfo.style.display = 'flex';
                 userName.textContent = `Olá, ${currentUser.name}`;
+                showLoggedInState();
             } else {
                 authLinks.style.display = 'flex';
                 userInfo.style.display = 'none';
+                showNotLoggedInState();
             }
         }
 
