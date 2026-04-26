@@ -5,6 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Meta Track</title>
     <link rel="stylesheet" href="Inicial.css">
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey:            "AIzaSyDNtC59j5VIY-mmznyjDUvZ1FkjQKgmf3o",
+        authDomain:        "ethania.firebaseapp.com",
+        projectId:         "ethania",
+        storageBucket:     "ethania.firebasestorage.app",
+        messagingSenderId: "290971711529",
+        appId:             "1:290971711529:web:655a835e54baeef36d4438",
+        measurementId:     "G-DZDTQ0B676"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+   window._auth                       = auth;
+window._signInWithEmailAndPassword = signInWithEmailAndPassword;
+
+
+</script>
 </head>
 <body>
     <div class="auth-page">
@@ -31,34 +52,41 @@
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <script>
-        // Função de mostrar toast
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 2300);
+    function showToast(message, type = 'default') {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className = 'toast'; // reseta classes anteriores
+    if (type === 'success') toast.classList.add('toast-success');
+    if (type === 'error')   toast.classList.add('toast-error');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2300);
+}
+
+    async function loginUser(event) {
+        event.preventDefault();
+        const email    = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+        const btn      = document.querySelector('button[type="submit"]');
+
+        btn.disabled = true; btn.textContent = 'Entrando...';
+
+        try {
+            const userCredential = await window._signInWithEmailAndPassword(window._auth, email, password);
+            const user = userCredential.user;
+            localStorage.setItem('currentUser', JSON.stringify({ name: user.displayName || email.split('@')[0], email: user.email }));
+            showToast('Login realizado com sucesso!', 'success');
+            setTimeout(() => { window.location.href = 'Inicial.html'; }, 1000);
+        } catch (error) {
+            const msgs = {
+                'auth/invalid-credential':     'As informações de login estão incorretas. Verifique seu email e senha.',
+                'auth/too-many-requests':      'Muitas tentativas. Aguarde alguns minutos.',
+                'auth/network-request-failed': 'Sem conexão. Verifique sua internet.',
+                'auth/user-disabled':          'Esta conta foi desativada.',
+            };
+            showToast(msgs[error.code] || 'Erro ao fazer login. Tente novamente.', 'error');
+            btn.disabled = false; btn.textContent = 'Entrar';
         }
-
-        function loginUser(event) {
-            event.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const user = users.find(u => u.email === email && u.password === password);
-
-            if (user) {
-                localStorage.setItem('currentUser', JSON.stringify({ name: user.name, email: user.email }));
-                showToast('Login realizado com sucesso!');
-                setTimeout(() => {
-                    window.location.href = 'Inicial.html';
-                }, 1000);
-            } else {
-                showToast('As informações de login estão incorretas. Verifique seu email e senha.');
-            }
-        }
-    </script>
+    }
+</script>
 </body>
 </html>

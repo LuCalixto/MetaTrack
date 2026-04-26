@@ -1,10 +1,96 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head><meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meta Track</title>
     <link rel="stylesheet" href="Inicial.css">
+    <style>
+        /* Notificação de prazo */
+        #deadline-banner {
+            display: none;
+            background: #3a1a1a;
+            border: 1px solid #ff5252;
+            border-radius: 8px;
+            padding: 0.75rem 1.25rem;
+            margin: 1rem 0 0.5rem 0;
+            color: #ff6b6b;
+            font-size: 0.9rem;
+        }
+        #deadline-banner strong { display: block; margin-bottom: 0.4rem; color: #ff5252; }
+        #deadline-banner ul { list-style: disc; padding-left: 1.2rem; display: block; grid-template-columns: none; gap: 0; margin: 0; background: none; box-shadow: none; border: none; }
+        #deadline-banner ul li { background: none; border: none; padding: 0.1rem 0; box-shadow: none; display: list-item; color: #ff6b6b; font-size: 0.85rem; }
+
+        /* Modal de edição */
+        #edit-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 20000;
+            align-items: center;
+            justify-content: center;
+        }
+        #edit-modal-overlay.show { display: flex; }
+        #edit-modal {
+            background: #1f1f3e;
+            border: 1px solid #555;
+            border-radius: 12px;
+            padding: 1.5rem;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        #edit-modal h3 { color: #e0e0e0; margin-bottom: 1rem; border-bottom: 2px solid #ff00ff; padding-bottom: 0.5rem; }
+        #edit-modal .form-group { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.75rem; }
+        #edit-modal label { color: #b0b0b0; font-size: 0.85rem; font-weight: bold; }
+        #edit-modal input, #edit-modal select, #edit-modal textarea {
+            padding: 0.4rem; border: 1px solid #555; border-radius: 6px;
+            background: #1a1a2e; color: #e0e0e0; font-size: 0.85rem;
+        }
+        #edit-modal textarea { resize: vertical; min-height: 60px; }
+        .edit-modal-actions { display: flex; gap: 0.75rem; margin-top: 1rem; justify-content: flex-end; }
+        .edit-modal-actions button {
+            padding: 0.5rem 1.25rem; border: none; border-radius: 6px;
+            cursor: pointer; font-size: 0.9rem; font-weight: bold;
+        }
+        .btn-save { background: #ff00ff; color: #0a0a0a; }
+        .btn-cancel { background: #3a3a3a; color: #e0e0e0; }
+
+        /* Subtarefas */
+        .subtasks-section { margin-top: 0.75rem; border-top: 1px solid #333; padding-top: 0.75rem; }
+        .subtasks-section h5 { color: #b0b0b0; font-size: 0.8rem; margin-bottom: 0.5rem; }
+        .subtask-item { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem; font-size: 0.82rem; }
+        .subtask-item input[type="checkbox"] { margin: 0; flex-shrink: 0; }
+        .subtask-item label { color: #e0e0e0; cursor: pointer; }
+        .subtask-item label.done { text-decoration: line-through; color: #888; }
+        .subtask-progress { font-size: 0.75rem; color: #4ecdc4; margin-top: 0.25rem; }
+        .subtask-add { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+        .subtask-add input {
+            flex: 1; padding: 0.25rem 0.5rem; border: 1px solid #555;
+            border-radius: 4px; background: #1a1a2e; color: #e0e0e0; font-size: 0.8rem;
+        }
+        .subtask-add button {
+            padding: 0.25rem 0.75rem; background: #8a2be2; color: #e0e0e0;
+            border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;
+        }
+
+        /* Botão exportar */
+        .export-btn {
+            padding: 0.5rem 1rem; background: #4ecdc4; color: #1a1a2e;
+            border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem;
+            font-weight: bold; margin-bottom: 1rem; transition: background 0.2s;
+        }
+        .export-btn:hover { background: #26d0ce; }
+
+        /* Botão editar no card */
+        .edit-btn {
+            background-color: #45b7d1; color: #1a1a2e;
+            padding: 0.25rem 0.5rem; border: none; border-radius: 4px;
+            cursor: pointer; font-size: 0.8rem; transition: all 0.2s ease;
+        }
+        .edit-btn:hover { background-color: #2a9fc0; }
+    </style>
 </head>
 <body>
     <header class="header">
@@ -31,103 +117,135 @@
         </div>
     </header>
 
-    <!-- Conteúdo principal da página -->
+    <!-- Banner de prazo próximo -->
+    <div id="deadline-banner">
+        <strong>⚠️ Metas com prazo próximo (3 dias ou menos):</strong>
+        <ul id="deadline-list"></ul>
+    </div>
+
+    <!-- Modal de edição -->
+    <div id="edit-modal-overlay">
+        <div id="edit-modal">
+            <h3>Editar Meta</h3>
+            <div class="form-group">
+                <label>Título:</label>
+                <input type="text" id="edit-titulo">
+            </div>
+            <div class="form-group">
+                <label>Descrição:</label>
+                <textarea id="edit-descricao" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Categoria:</label>
+                <input type="text" id="edit-categoria">
+            </div>
+            <div class="form-group">
+                <label>Prioridade:</label>
+                <select id="edit-prioridade">
+                    <option value="baixa">Baixa</option>
+                    <option value="media">Média</option>
+                    <option value="alta">Alta</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Nível de Foco:</label>
+                <select id="edit-nivel-foco">
+                    <option value="1">1 - 15 min</option>
+                    <option value="2">2 - 25 min</option>
+                    <option value="3">3 - 45 min</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Data Limite:</label>
+                <input type="date" id="edit-data">
+            </div>
+            <div class="edit-modal-actions">
+                <button class="btn-cancel" onclick="closeEditModal()">Cancelar</button>
+                <button class="btn-save" onclick="saveEdit()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
     <main>
         <div class="main-top-row">
-            <!-- Seção para adicionar uma nova meta -->
             <section id="adicionar-meta">
-                <!-- Título da seção -->
                 <h2>Adicionar Nova Meta</h2>
-            <!-- Formulário para adicionar meta, chama função addGoal ao submeter -->
-            <form onsubmit="addGoal(event)">
-                <!-- Linha 1: Título e Descrição -->
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="titulo-meta">Título da Meta:</label>
-                        <input type="text" id="titulo-meta" name="titulo-meta" required>
+                <form onsubmit="addGoal(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="titulo-meta">Título da Meta:</label>
+                            <input type="text" id="titulo-meta" name="titulo-meta" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="descricao-meta">Descrição:</label>
+                            <textarea id="descricao-meta" name="descricao-meta" rows="2"></textarea>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="descricao-meta">Descrição:</label>
-                        <textarea id="descricao-meta" name="descricao-meta" rows="2"></textarea>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="categoria-meta">Categoria:</label>
+                            <input type="text" id="categoria-meta" name="categoria-meta" placeholder="Ex: Pessoal, Trabalho, Saúde">
+                        </div>
+                        <div class="form-group">
+                            <label for="prioridade-meta">Prioridade:</label>
+                            <select id="prioridade-meta" name="prioridade-meta">
+                                <option value="baixa">Baixa</option>
+                                <option value="media" selected>Média</option>
+                                <option value="alta">Alta</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="nivel-foco">Nível de Foco:</label>
+                            <select id="nivel-foco" name="nivel-foco">
+                                <option value="1">1 - 15 min</option>
+                                <option value="2" selected>2 - 25 min</option>
+                                <option value="3">3 - 45 min</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="data-limite">Data Limite:</label>
+                            <input type="date" id="data-limite" name="data-limite">
+                        </div>
+                        <div class="form-group">
+                            <label>&nbsp;</label>
+                            <button type="submit">Adicionar Meta</button>
+                        </div>
+                    </div>
+                </form>
+            </section>
 
-                <!-- Linha 2: Categoria, Prioridade, Nível de Foco -->
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="categoria-meta">Categoria:</label>
-                        <input type="text" id="categoria-meta" name="categoria-meta" placeholder="Ex: Pessoal, Trabalho, Saúde">
-                    </div>
-                    <div class="form-group">
-                        <label for="prioridade-meta">Prioridade:</label>
-                        <select id="prioridade-meta" name="prioridade-meta">
-                            <option value="baixa">Baixa</option>
-                            <option value="media" selected>Média</option>
-                            <option value="alta">Alta</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="nivel-foco">Nível de Foco:</label>
-                        <select id="nivel-foco" name="nivel-foco">
-                            <option value="1">1 - 15 min</option>
-                            <option value="2" selected>2 - 25 min</option>
-                            <option value="3">3 - 45 min</option>
-                        </select>
+            <aside id="calendar-widget" class="calendar-widget" aria-label="Calendário de metas">
+                <div class="calendar-header">
+                    <button id="prevMonthBtn" aria-label="Mês anterior">◀</button>
+                    <span id="calendarMonthLabel"></span>
+                    <button id="nextMonthBtn" aria-label="Próximo mês">▶</button>
+                </div>
+                <table class="calendar-table">
+                    <thead>
+                        <tr>
+                            <th>Dom</th><th>Seg</th><th>Ter</th><th>Qua</th>
+                            <th>Qui</th><th>Sex</th><th>Sáb</th>
+                        </tr>
+                    </thead>
+                    <tbody id="calendarBody"></tbody>
+                </table>
+                <div id="calendarDetails" class="calendar-details" aria-live="polite">
+                    <h3>Metas do dia</h3>
+                    <ul id="calendarGoalsList"></ul>
+                    <div id="diarySection" class="diary-section" style="display: none;">
+                        <h4>Diário de Progresso</h4>
+                        <div id="diaryEntries"></div>
                     </div>
                 </div>
-
-                <!-- Linha 3: Data e Botão -->
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="data-limite">Data Limite:</label>
-                        <input type="date" id="data-limite" name="data-limite">
-                    </div>
-                    <div class="form-group">
-                        <label>&nbsp;</label>
-                        <button type="submit">Adicionar Meta</button>
-                    </div>
-                </div>
-            </form>
-        </section>
-
-        <!-- Calendário mensal (lado direito) -->
-        <aside id="calendar-widget" class="calendar-widget" aria-label="Calendário de metas">
-            <div class="calendar-header">
-                <button id="prevMonthBtn" aria-label="Mês anterior">◀</button>
-                <span id="calendarMonthLabel"></span>
-                <button id="nextMonthBtn" aria-label="Próximo mês">▶</button>
-            </div>
-            <table class="calendar-table">
-                <thead>
-                    <tr>
-                        <th>Dom</th>
-                        <th>Seg</th>
-                        <th>Ter</th>
-                        <th>Qua</th>
-                        <th>Qui</th>
-                        <th>Sex</th>
-                        <th>Sáb</th>
-                    </tr>
-                </thead>
-                <tbody id="calendarBody"></tbody>
-            </table>
-            <div id="calendarDetails" class="calendar-details" aria-live="polite">
-                <h3>Metas do dia</h3>
-                <ul id="calendarGoalsList"></ul>
-                <div id="diarySection" class="diary-section" style="display: none;">
-                    <h4>Diário de Progresso</h4>
-                    <div id="diaryEntries"></div>
-                </div>
-            </div>
-            <div id="emotional-message" class="emotional-message"></div>
-        </aside>
+                <div id="emotional-message" class="emotional-message"></div>
+            </aside>
         </div>
 
-        <!-- Seção para listar as metas do usuário -->
         <section id="minhas-metas">
-            <!-- Título da seção -->
             <h2>Minhas Metas</h2>
-            <!-- Filtros e ordenação -->
+            <button class="export-btn" onclick="exportCSV()">📥 Exportar Metas (CSV)</button>
             <div class="filters">
                 <label for="filter-status">Filtrar por Status:</label>
                 <select id="filter-status"><option value="">Todos</option><option value="Não iniciado">Não iniciado</option><option value="Em Andamento">Em Andamento</option><option value="Atrasada">Atrasada</option><option value="Concluída">Concluída</option></select>
@@ -138,93 +256,58 @@
                 <label for="sort-date">Ordenar por Data:</label>
                 <select id="sort-date"><option value="">Sem ordenação</option><option value="asc">Crescente</option><option value="desc">Decrescente</option></select>
             </div>
-            <!-- Toggle de visualização -->
             <div class="view-toggle">
                 <button id="list-view">📋 Lista</button>
                 <button id="cards-view" class="active">📇 Cards</button>
             </div>
-            <!-- Container para lista -->
-            <div id="goals-list-container" style="display: none;">
-                <ul>
-                </ul>
-            </div>
-            <!-- Container para cards -->
+            <div id="goals-list-container" style="display: none;"><ul></ul></div>
             <div id="goals-cards-container">
-                <div class="goals-cards" id="goalsCards">
-                </div>
+                <div class="goals-cards" id="goalsCards"></div>
             </div>
         </section>
 
-        <!-- Seção para mostrar o progresso geral -->
         <section id="progresso">
-            <!-- Título da seção -->
             <h2>Progresso Geral</h2>
-            <!-- Parágrafo com texto dinâmico do progresso -->
-            <p id="progress-text">Metas concluídas: 1 de 2</p>
-            <!-- Barra de progresso -->
-            <progress id="progress-bar" value="50" max="100"></progress>
+            <p id="progress-text">Metas concluídas: 0 de 0</p>
+            <progress id="progress-bar" value="0" max="100"></progress>
+            <p id="progress-historic" style="margin-top:0.5rem; font-size:0.85rem; color:#4ecdc4;"></p>
         </section>
 
-        <!-- Seção do dashboard com métricas e gráficos -->
         <section id="dashboard">
-            <!-- Título da seção -->
             <h2>Dashboard de Performance</h2>
-            <!-- Grade de cartões para métricas -->
             <div class="dashboard-grid">
-                <!-- Cartão para metas concluídas na semana -->
                 <article class="card">
-                    <!-- Título do cartão -->
                     <h3>Concluídas (semana)</h3>
-                    <!-- Parágrafo com número de metas concluídas na semana -->
                     <p id="concluidas-semana"></p>
-                    <!-- Parágrafo com comparação com semana anterior -->
                     <p id="comparativo-semana"></p>
                 </article>
-                <!-- Cartão para metas concluídas no mês -->
                 <article class="card">
-                    <!-- Título do cartão -->
                     <h3>Concluídas (mês)</h3>
-                    <!-- Parágrafo com número de metas concluídas no mês -->
                     <p id="concluidas-mes"></p>
-                    <!-- Parágrafo com comparação com mês anterior -->
                     <p id="comparativo-mes"></p>
                 </article>
             </div>
-            <!-- Seção de conquistas -->
             <div class="achievements-section">
                 <h3>🏆 Conquistas Desbloqueadas</h3>
-                <div class="achievements-grid" id="achievementsGrid">
-                    <!-- Medalhas serão inseridas dinamicamente aqui -->
-                </div>
+                <div class="achievements-grid" id="achievementsGrid"></div>
             </div>
-            <!-- Container para os gráficos -->
             <div class="charts-wrapper">
-                <!-- Cartão para gráfico semanal -->
                 <div class="chart-card">
-                    <!-- Título do gráfico -->
                     <h3>Metas Concluídas (últimas 4 semanas)</h3>
-                    <!-- Canvas para renderizar o gráfico semanal -->
                     <canvas id="weeklyChart"></canvas>
                 </div>
-                <!-- Cartão para gráfico mensal -->
                 <div class="chart-card">
-                    <!-- Título do gráfico -->
                     <h3>Metas Concluídas (últimos 6 meses)</h3>
-                    <!-- Canvas para renderizar o gráfico mensal -->
                     <canvas id="monthlyChart"></canvas>
                 </div>
             </div>
         </section>
+    </main>
 
     <div id="calendarTooltip" class="calendar-tooltip" aria-hidden="true"></div>
-
-    <!-- Toast notification -->
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
-    <!-- Power-up container -->
     <div id="powerUpContainer"></div>
 
-    <!-- Modo Foco Overlay -->
     <div id="focusModeOverlay" class="focus-mode-overlay" style="display: none;">
         <div class="focus-mode-content">
             <h2 id="focusGoalTitle">Título da Meta</h2>
@@ -236,46 +319,187 @@
         </div>
     </div>
 
-    <!-- Rodapé da página -->
     <footer>
-        <!-- Texto de direitos autorais -->
         <p>&copy; 2026 Sistema de Metas. Todos os direitos reservados.</p>
     </footer>
 
-    <!-- Script externo para biblioteca Chart.js para gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Script interno para funcionalidades JavaScript -->
     <script>
-        // Função de mostrar toast
-        function showToast(message) {
+        // ── Toast ───────────────────────────────────────────────────────────
+        function showToast(message, type = 'default') {
             const toast = document.getElementById('toast');
             toast.textContent = message;
+            toast.className = 'toast';
+            if (type === 'success') toast.classList.add('toast-success');
+            if (type === 'error')   toast.classList.add('toast-error');
             toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 2300);
+            setTimeout(() => toast.classList.remove('show'), 2300);
         }
 
-        // Função para criar efeito de power-up
+        // ── Power-up ────────────────────────────────────────────────────────
         function showPowerUp(type = 'create') {
             const container = document.getElementById('powerUpContainer');
             const powerUp = document.createElement('div');
             powerUp.className = `power-up power-up-${type}`;
-            
-            const messages = {
-                create: '✨ META CRIADA! ✨',
-                start: '🚀 INICIADO! 🚀',
-                complete: '🎉 CONCLUÍDO! 🎉'
-            };
-            
+            const messages = { create: '✨ META CRIADA! ✨', start: '🚀 INICIADO! 🚀', complete: '🎉 CONCLUÍDO! 🎉' };
             powerUp.textContent = messages[type] || messages.create;
             container.appendChild(powerUp);
-            
-            setTimeout(() => {
-                powerUp.remove();
-            }, 2000);
+            setTimeout(() => powerUp.remove(), 2000);
         }
 
+        // ── Notificações de prazo ───────────────────────────────────────────
+        function checkDeadlines() {
+            const goals = JSON.parse(localStorage.getItem('goals')) || [];
+            const today = new Date(); today.setHours(0,0,0,0);
+            const in3days = new Date(today); in3days.setDate(today.getDate() + 3);
+
+            const urgent = goals.filter(g => {
+                if (g.completed || !g.date) return false;
+                const due = new Date(g.date); due.setHours(0,0,0,0);
+                return due >= today && due <= in3days;
+            });
+
+            const banner = document.getElementById('deadline-banner');
+            const list   = document.getElementById('deadline-list');
+            if (urgent.length === 0) { banner.style.display = 'none'; return; }
+
+            list.innerHTML = '';
+            urgent.forEach(g => {
+                const due = new Date(g.date); due.setHours(0,0,0,0);
+                const diff = Math.round((due - today) / 86400000);
+                const label = diff === 0 ? 'vence hoje' : diff === 1 ? 'vence amanhã' : `vence em ${diff} dias`;
+                const li = document.createElement('li');
+                li.textContent = `${g.title} — ${label}`;
+                list.appendChild(li);
+            });
+            banner.style.display = 'block';
+        }
+
+        // ── Progresso acumulado (histórico) ────────────────────────────────
+        function getHistoricTotal() {
+            return parseInt(localStorage.getItem('totalCompletedEver') || '0');
+        }
+
+        function updateHistoricTotal(goals) {
+            const current = goals.filter(g => g.completed).length;
+            const saved   = getHistoricTotal();
+            if (current > saved) localStorage.setItem('totalCompletedEver', String(current));
+        }
+
+        // ── Exportar CSV ────────────────────────────────────────────────────
+        function exportCSV() {
+            const goals = JSON.parse(localStorage.getItem('goals')) || [];
+            if (goals.length === 0) { showToast('Nenhuma meta para exportar.', 'error'); return; }
+
+            const header = ['Título','Descrição','Categoria','Prioridade','Data Limite','Status','Subtarefas concluídas','Total subtarefas'];
+            const rows = goals.map(g => {
+                const subtasks = g.subtasks || [];
+                const doneSubs = subtasks.filter(s => s.done).length;
+                return [
+                    `"${(g.title||'').replace(/"/g,'""')}"`,
+                    `"${(g.description||'').replace(/"/g,'""')}"`,
+                    `"${(g.categoria||'').replace(/"/g,'""')}"`,
+                    g.prioridade || '',
+                    g.date || '',
+                    getStatus(g),
+                    doneSubs,
+                    subtasks.length
+                ].join(',');
+            });
+
+            const csv  = [header.join(','), ...rows].join('\n');
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href = url; a.download = 'metatrack_metas.csv';
+            a.click(); URL.revokeObjectURL(url);
+            showToast('Metas exportadas com sucesso!', 'success');
+        }
+
+        // ── Editar meta ─────────────────────────────────────────────────────
+        let editingIndex = null;
+
+        function openEditModal(index) {
+            const goals = JSON.parse(localStorage.getItem('goals')) || [];
+            const g = goals[index];
+            if (!g) return;
+            editingIndex = index;
+            document.getElementById('edit-titulo').value      = g.title || '';
+            document.getElementById('edit-descricao').value   = g.description || '';
+            document.getElementById('edit-categoria').value   = g.categoria || '';
+            document.getElementById('edit-prioridade').value  = g.prioridade || 'media';
+            document.getElementById('edit-nivel-foco').value  = g.nivelFoco || 2;
+            document.getElementById('edit-data').value        = g.date || '';
+            document.getElementById('edit-modal-overlay').classList.add('show');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal-overlay').classList.remove('show');
+            editingIndex = null;
+        }
+
+        function saveEdit() {
+            if (editingIndex === null) return;
+            const goals = JSON.parse(localStorage.getItem('goals')) || [];
+            goals[editingIndex].title       = document.getElementById('edit-titulo').value.trim();
+            goals[editingIndex].description = document.getElementById('edit-descricao').value.trim();
+            goals[editingIndex].categoria   = document.getElementById('edit-categoria').value.trim();
+            goals[editingIndex].prioridade  = document.getElementById('edit-prioridade').value;
+            goals[editingIndex].nivelFoco   = parseInt(document.getElementById('edit-nivel-foco').value);
+            goals[editingIndex].date        = document.getElementById('edit-data').value;
+            localStorage.setItem('goals', JSON.stringify(goals));
+            closeEditModal();
+            renderGoals();
+            showToast('Meta atualizada!', 'success');
+        }
+
+        // ── Subtarefas ──────────────────────────────────────────────────────
+        function addSubtask(goalIndex) {
+            const input = document.getElementById(`subtask-input-${goalIndex}`);
+            const text  = input.value.trim();
+            if (!text) return;
+            const goals = JSON.parse(localStorage.getItem('goals')) || [];
+            if (!goals[goalIndex].subtasks) goals[goalIndex].subtasks = [];
+            goals[goalIndex].subtasks.push({ text, done: false });
+            localStorage.setItem('goals', JSON.stringify(goals));
+            input.value = '';
+            renderGoals();
+        }
+
+        function toggleSubtask(goalIndex, subIndex) {
+            const goals = JSON.parse(localStorage.getItem('goals')) || [];
+            goals[goalIndex].subtasks[subIndex].done = !goals[goalIndex].subtasks[subIndex].done;
+            localStorage.setItem('goals', JSON.stringify(goals));
+            renderGoals();
+        }
+
+        function renderSubtasks(goal, goalIndex, container) {
+            const subtasks = goal.subtasks || [];
+            const done = subtasks.filter(s => s.done).length;
+            const section = document.createElement('div');
+            section.className = 'subtasks-section';
+            section.innerHTML = `<h5>Subtarefas ${subtasks.length > 0 ? `(${done}/${subtasks.length})` : ''}</h5>`;
+            subtasks.forEach((sub, si) => {
+                const item = document.createElement('div');
+                item.className = 'subtask-item';
+                item.innerHTML = `
+                    <input type="checkbox" id="sub-${goalIndex}-${si}" ${sub.done ? 'checked' : ''}>
+                    <label for="sub-${goalIndex}-${si}" class="${sub.done ? 'done' : ''}">${sub.text}</label>
+                `;
+                item.querySelector('input').addEventListener('change', () => toggleSubtask(goalIndex, si));
+                section.appendChild(item);
+            });
+            const addDiv = document.createElement('div');
+            addDiv.className = 'subtask-add';
+            addDiv.innerHTML = `
+                <input type="text" id="subtask-input-${goalIndex}" placeholder="Nova subtarefa...">
+                <button onclick="addSubtask(${goalIndex})">+</button>
+            `;
+            section.appendChild(addDiv);
+            container.appendChild(section);
+        }
+
+        // ── Calendário ──────────────────────────────────────────────────────
         let calendarCurrentDate = new Date();
 
         function formatMonthYear(date) {
@@ -284,10 +508,9 @@
 
         function getGoalDaysForMonth(date) {
             const goals = JSON.parse(localStorage.getItem('goals')) || [];
-            const days = new Map();
-            const year = date.getFullYear();
-            const month = date.getMonth();
-            goals.forEach((goal) => {
+            const days  = new Map();
+            const year  = date.getFullYear(), month = date.getMonth();
+            goals.forEach(goal => {
                 if (goal.date) {
                     const d = new Date(goal.date);
                     if (d.getFullYear() === year && d.getMonth() === month) {
@@ -300,38 +523,26 @@
             return days;
         }
 
-        const goalColors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#ffa07a', '#98d8c8', '#f7dc6f', '#bb8fce', '#85c1e2'];
-        
-        function getGoalColor(goalIndex) {
-            return goalColors[goalIndex % goalColors.length];
-        }
+        const goalColors = ['#ff6b6b','#4ecdc4','#45b7d1','#ffa07a','#98d8c8','#f7dc6f','#bb8fce','#85c1e2'];
+        function getGoalColor(i) { return goalColors[i % goalColors.length]; }
 
         function getGoalIntervalDaysForMonth(date) {
             const goals = JSON.parse(localStorage.getItem('goals')) || [];
             const intervalDays = new Map();
-            const year = date.getFullYear();
-            const month = date.getMonth();
+            const year  = date.getFullYear(), month = date.getMonth();
             const currentMonthStart = new Date(year, month, 1);
-            const currentMonthEnd = new Date(year, month + 1, 0);
-            
+            const currentMonthEnd   = new Date(year, month + 1, 0);
             goals.forEach((goal, goalIndex) => {
                 if (goal.started && goal.startedAt && goal.date) {
                     const startDate = new Date(goal.startedAt);
-                    const endDate = goal.completed && goal.completedAt ? new Date(goal.completedAt) : new Date(goal.date);
-                    
+                    const endDate   = goal.completed && goal.completedAt ? new Date(goal.completedAt) : new Date(goal.date);
                     if (startDate <= currentMonthEnd && endDate >= currentMonthStart) {
                         const rangeStart = startDate > currentMonthStart ? startDate : currentMonthStart;
-                        const rangeEnd = endDate < currentMonthEnd ? endDate : currentMonthEnd;
-                        
+                        const rangeEnd   = endDate < currentMonthEnd ? endDate : currentMonthEnd;
                         for (let d = new Date(rangeStart); d <= rangeEnd; d.setDate(d.getDate() + 1)) {
                             const dayNum = d.getDate();
                             if (!intervalDays.has(dayNum)) intervalDays.set(dayNum, []);
-                            intervalDays.get(dayNum).push({
-                                goalIndex: goalIndex,
-                                isStarted: d.getTime() === startDate.getTime(),
-                                isCompleted: d.getTime() === endDate.getTime(),
-                                title: goal.title
-                            });
+                            intervalDays.get(dayNum).push({ goalIndex, isStarted: d.getTime() === startDate.getTime(), isCompleted: d.getTime() === endDate.getTime(), title: goal.title });
                         }
                     }
                 }
@@ -340,91 +551,58 @@
         }
 
         function showDayGoals(goals, dateText) {
-            const details = document.getElementById('calendarGoalsList');
-            const title = document.querySelector('#calendarDetails h3');
+            const details      = document.getElementById('calendarGoalsList');
+            const title        = document.querySelector('#calendarDetails h3');
             const diarySection = document.getElementById('diarySection');
             const diaryEntries = document.getElementById('diaryEntries');
             if (!details || !title || !diarySection || !diaryEntries) return;
-
-            title.textContent = goals.length > 0 ? `Metas de ${dateText}` : `Nenhuma meta em ${dateText}`;
-            details.innerHTML = '';
-            diaryEntries.innerHTML = '';
-
-            if (goals.length === 0) {
-                const li = document.createElement('li');
-                li.textContent = 'Sem metas cadastradas';
-                details.appendChild(li);
-                diarySection.style.display = 'none';
-                return;
-            }
-
+            title.textContent  = goals.length > 0 ? `Metas de ${dateText}` : `Nenhuma meta em ${dateText}`;
+            details.innerHTML  = ''; diaryEntries.innerHTML = '';
+            if (goals.length === 0) { diarySection.style.display = 'none'; return; }
             diarySection.style.display = 'block';
-
             goals.forEach((goal, index) => {
                 const li = document.createElement('li');
                 li.textContent = `${goal.title} – ${goal.description || 'sem descrição'}`;
                 details.appendChild(li);
-
-                // Adicionar entrada de diário para cada meta
                 const diaryEntry = document.createElement('div');
                 diaryEntry.className = 'diary-entry';
-                diaryEntry.innerHTML = `
-                    <label for="diary-${index}">${goal.title}:</label>
-                    <textarea id="diary-${index}" rows="3" placeholder="Escreva sobre seu progresso hoje...">${getDiaryNote(dateText, goal.title) || ''}</textarea>
-                `;
+                diaryEntry.innerHTML = `<label for="diary-${index}">${goal.title}:</label><textarea id="diary-${index}" rows="3" placeholder="Escreva sobre seu progresso hoje...">${getDiaryNote(dateText, goal.title) || ''}</textarea>`;
                 diaryEntries.appendChild(diaryEntry);
-
-                // Salvar automaticamente ao sair do campo
                 const textarea = diaryEntry.querySelector('textarea');
                 textarea.addEventListener('blur', () => saveDiaryNote(dateText, goal.title, textarea.value));
             });
         }
 
         function renderCalendar() {
-            const monthLabel = document.getElementById('calendarMonthLabel');
+            const monthLabel  = document.getElementById('calendarMonthLabel');
             const calendarBody = document.getElementById('calendarBody');
             if (!monthLabel || !calendarBody) return;
-
             monthLabel.textContent = formatMonthYear(calendarCurrentDate);
-
-            const firstOfMonth = new Date(calendarCurrentDate.getFullYear(), calendarCurrentDate.getMonth(), 1);
+            const firstOfMonth   = new Date(calendarCurrentDate.getFullYear(), calendarCurrentDate.getMonth(), 1);
             const startingWeekday = firstOfMonth.getDay();
-            const daysInMonth = new Date(calendarCurrentDate.getFullYear(), calendarCurrentDate.getMonth() + 1, 0).getDate();
-
-            const goalDays = getGoalDaysForMonth(calendarCurrentDate);
-            const intervalDays = getGoalIntervalDaysForMonth(calendarCurrentDate);
+            const daysInMonth    = new Date(calendarCurrentDate.getFullYear(), calendarCurrentDate.getMonth() + 1, 0).getDate();
+            const goalDays       = getGoalDaysForMonth(calendarCurrentDate);
+            const intervalDays   = getGoalIntervalDaysForMonth(calendarCurrentDate);
             calendarBody.innerHTML = '';
-
-            let html = '';
-            let dayNumber = 1;
-
+            let html = '', dayNumber = 1;
             for (let week = 0; week < 6; week++) {
                 html += '<tr>';
                 for (let weekday = 0; weekday < 7; weekday++) {
-                    if (week === 0 && weekday < startingWeekday) {
-                        html += '<td class="empty"></td>';
-                    } else if (dayNumber > daysInMonth) {
-                        html += '<td class="empty"></td>';
-                    } else {
-                        let dayClass = 'calendar-day';
-                        let dataAttr = '';
+                    if (week === 0 && weekday < startingWeekday) { html += '<td class="empty"></td>'; }
+                    else if (dayNumber > daysInMonth) { html += '<td class="empty"></td>'; }
+                    else {
+                        let dayClass = 'calendar-day', dataAttr = '';
                         const dayIntervalGoals = intervalDays.get(dayNumber) || [];
-                        
                         if (goalDays.has(dayNumber)) dayClass += ' day-with-goal';
                         if (dayIntervalGoals.length > 0) {
                             dayClass += ' day-in-progress';
                             if (dayIntervalGoals.length === 1) {
-                                const goalIndex = dayIntervalGoals[0].goalIndex;
-                                if (dayIntervalGoals[0].isStarted) {
-                                    dayClass += ' day-started';
-                                } else if (dayIntervalGoals[0].isCompleted) {
-                                    dayClass += ' day-completed';
-                                }
-                                dataAttr = ` data-goal-index="${goalIndex}"`;
+                                if (dayIntervalGoals[0].isStarted) dayClass += ' day-started';
+                                else if (dayIntervalGoals[0].isCompleted) dayClass += ' day-completed';
+                                dataAttr = ` data-goal-index="${dayIntervalGoals[0].goalIndex}"`;
                             } else {
                                 dayClass += ' day-multiple';
-                                const goalIndices = dayIntervalGoals.map(g => g.goalIndex).join(',');
-                                dataAttr = ` data-goal-indices="${goalIndices}"`;
+                                dataAttr = ` data-goal-indices="${dayIntervalGoals.map(g => g.goalIndex).join(',')}"`;
                             }
                         }
                         html += `<td><span class="${dayClass}"${dataAttr}>${dayNumber}</span></td>`;
@@ -434,49 +612,30 @@
                 html += '</tr>';
                 if (dayNumber > daysInMonth) break;
             }
-
             calendarBody.innerHTML = html;
-
-            const dayCells = calendarBody.querySelectorAll('.calendar-day');
-            dayCells.forEach((cell) => {
+            calendarBody.querySelectorAll('.calendar-day').forEach(cell => {
                 const day = parseInt(cell.textContent, 10);
-                const goalDays = getGoalDaysForMonth(calendarCurrentDate);
-                const intervalDays = getGoalIntervalDaysForMonth(calendarCurrentDate);
-                const goalsForDay = goalDays.get(day) || [];
-                const intervalGoalsForDay = intervalDays.get(day) || [];
-                
+                const gd  = getGoalDaysForMonth(calendarCurrentDate);
+                const id  = getGoalIntervalDaysForMonth(calendarCurrentDate);
+                const goalsForDay = gd.get(day) || [];
+                const intervalGoalsForDay = id.get(day) || [];
                 let allTitles = goalsForDay.map(g => g.title);
                 const intervalTitles = intervalGoalsForDay.map(g => g.title).filter(t => !allTitles.includes(t));
                 allTitles = [...allTitles, ...intervalTitles];
-                
-                if (allTitles.length > 0) {
-                    cell.setAttribute('title', allTitles.join(', '));
-                } else {
-                    cell.removeAttribute('title');
-                }
-                
+                if (allTitles.length > 0) cell.setAttribute('title', allTitles.join(', '));
+                else cell.removeAttribute('title');
                 if (intervalGoalsForDay.length === 1) {
                     const color = getGoalColor(intervalGoalsForDay[0].goalIndex);
-                    if (cell.classList.contains('day-started') || cell.classList.contains('day-completed')) {
-                        cell.style.borderColor = color;
-                    } else {
-                        cell.style.borderColor = color;
-                        cell.style.color = color;
-                    }
+                    cell.style.borderColor = color;
+                    if (!cell.classList.contains('day-started') && !cell.classList.contains('day-completed')) cell.style.color = color;
                 } else if (intervalGoalsForDay.length > 1) {
-                    const colors = intervalGoalsForDay.map(g => getGoalColor(g.goalIndex));
-                    cell.setAttribute('data-goal-colors', colors.join(' '));
+                    cell.setAttribute('data-goal-colors', intervalGoalsForDay.map(g => getGoalColor(g.goalIndex)).join(' '));
                 }
-
                 cell.addEventListener('click', () => {
                     const fullDate = new Date(calendarCurrentDate.getFullYear(), calendarCurrentDate.getMonth(), day);
                     const formatted = fullDate.toLocaleDateString('pt-BR');
                     const allGoals = [...goalsForDay];
-                    intervalGoalsForDay.forEach(g => {
-                        if (!allGoals.find(og => og.title === g.title)) {
-                            allGoals.push({title: g.title, description: 'Meta em progresso'});
-                        }
-                    });
+                    intervalGoalsForDay.forEach(g => { if (!allGoals.find(og => og.title === g.title)) allGoals.push({ title: g.title, description: 'Meta em progresso' }); });
                     showDayGoals(allGoals, formatted);
                 });
             });
@@ -485,28 +644,12 @@
         function setupCalendarControls() {
             const prev = document.getElementById('prevMonthBtn');
             const next = document.getElementById('nextMonthBtn');
-
-            if (prev) {
-                prev.addEventListener('click', () => {
-                    calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() - 1);
-                    renderCalendar();
-                });
-            }
-            if (next) {
-                next.addEventListener('click', () => {
-                    calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + 1);
-                    renderCalendar();
-                });
-            }
+            if (prev) prev.addEventListener('click', () => { calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() - 1); renderCalendar(); });
+            if (next) next.addEventListener('click', () => { calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + 1); renderCalendar(); });
         }
 
-        function refreshCalendar() {
-            if (document.getElementById('calendar-widget')) {
-                renderCalendar();
-            }
-        }
+        function refreshCalendar() { if (document.getElementById('calendar-widget')) renderCalendar(); }
 
-        // Funções para diário de progresso
         function getDiaryNote(dateText, goalTitle) {
             const diary = JSON.parse(localStorage.getItem('diary')) || {};
             return diary[`${dateText}-${goalTitle}`] || '';
@@ -518,162 +661,81 @@
             localStorage.setItem('diary', JSON.stringify(diary));
         }
 
-        // Função para adicionar uma nova meta
+        // ── Adicionar meta ──────────────────────────────────────────────────
         function addGoal(event) {
-            // Previne o comportamento padrão do formulário primeiro
             if (event) event.preventDefault();
-
-            // Verificar se usuário está logado
             const currentUser = JSON.parse(localStorage.getItem('currentUser'));
             if (!currentUser) {
-                showToast('Você precisa fazer login para adicionar metas!');
-                setTimeout(() => {
-                    window.location.href = 'login.html';
-                }, 1000);
+                showToast('Você precisa fazer login para adicionar metas!', 'error');
+                setTimeout(() => { window.location.href = 'login.html'; }, 1000);
                 return;
             }
-
-            // Obtém os valores dos campos do formulário
-            const title = document.getElementById('titulo-meta').value;
+            const title      = document.getElementById('titulo-meta').value;
             const description = document.getElementById('descricao-meta').value;
-            const date = document.getElementById('data-limite').value;
+            const date       = document.getElementById('data-limite').value;
             const prioridade = document.getElementById('prioridade-meta').value;
-            const categoria = document.getElementById('categoria-meta').value;
-            const nivelFoco = parseInt(document.getElementById('nivel-foco').value);
-            // Recupera as metas existentes do localStorage
-            const goals = JSON.parse(localStorage.getItem('goals')) || [];
-            // Adiciona a nova meta ao array
-            goals.push({ title, description, date, prioridade, categoria, nivelFoco, completed: false, started: false, startedAt: null, completedAt: null });
-            // Salva o array atualizado no localStorage
+            const categoria  = document.getElementById('categoria-meta').value;
+            const nivelFoco  = parseInt(document.getElementById('nivel-foco').value);
+            const goals      = JSON.parse(localStorage.getItem('goals')) || [];
+            goals.push({ title, description, date, prioridade, categoria, nivelFoco, completed: false, started: false, startedAt: null, completedAt: null, subtasks: [] });
             localStorage.setItem('goals', JSON.stringify(goals));
-            // Renderiza as metas novamente
+            showPowerUp('create');
+            showToast('Meta criada com sucesso!', 'success');
             renderGoals();
-            // Limpa os campos do formulário
-            document.getElementById('titulo-meta').value = '';
+            document.getElementById('titulo-meta').value    = '';
             document.getElementById('descricao-meta').value = '';
-            document.getElementById('data-limite').value = '';
+            document.getElementById('data-limite').value    = '';
             document.getElementById('prioridade-meta').value = 'media';
             document.getElementById('categoria-meta').value = '';
-            document.getElementById('nivel-foco').value = '2';
-            
+            document.getElementById('nivel-foco').value     = '2';
+            checkDeadlines();
         }
 
-        // Função utilitária para recuperar o usuário atual
-        function getCurrentUser() {
-            return JSON.parse(localStorage.getItem('currentUser'));
-        }
+        function getCurrentUser() { return JSON.parse(localStorage.getItem('currentUser')); }
+        function showNotLoggedInState() {}
+        function showLoggedInState() {}
 
-        function showNotLoggedInState() {
-            // Não esconder seções, deixar layout visível
-            // const hiddenIds = ['adicionar-meta', 'calendar-widget', 'minhas-metas', 'progresso', 'dashboard'];
-            // hiddenIds.forEach(id => {
-            //     const element = document.getElementById(id);
-            //     if (element) element.style.display = 'none';
-            // });
-            // const message = document.getElementById('not-logged-message');
-            // if (message) message.style.display = 'block';
-        }
-
-        function showLoggedInState() {
-            // Não mostrar/ocultar seções, deixar sempre visível
-            // const visibleIds = ['adicionar-meta', 'calendar-widget', 'minhas-metas', 'progresso', 'dashboard'];
-            // visibleIds.forEach(id => {
-            //     const element = document.getElementById(id);
-            //     if (element) element.style.display = '';
-            // });
-            // const message = document.getElementById('not-logged-message');
-            // if (message) message.style.display = 'none';
-        }
-
-        // Função para determinar o status de uma meta
         function getStatus(goal) {
-            // Se a meta estiver concluída, retorna 'Concluída'
             if (goal.completed) return 'Concluída';
-            // Se a meta foi iniciada
             if (goal.started) {
-                // Obtém a data atual
-                const today = new Date();
-                today.setHours(0,0,0,0);
-                // Obtém a data limite da meta
-                const due = new Date(goal.date);
-                // Se a data limite passou, retorna 'Atrasada'
+                const today = new Date(); today.setHours(0,0,0,0);
+                const due   = new Date(goal.date);
                 if (due < today) return 'Atrasada';
-                // Caso contrário, retorna 'Em Andamento'
                 return 'Em Andamento';
             }
-            // Se não foi iniciada, retorna 'Não iniciado'
             return 'Não iniciado';
         }
 
-        // Função para renderizar as metas na página
+        // ── Renderizar metas ────────────────────────────────────────────────
         function renderGoals() {
-            // Sempre renderizar metas, independente de login
-            // const currentUser = getCurrentUser();
-            // if (!currentUser) {
-            //     showNotLoggedInState();
-            //     return;
-            // }
-
-            // Recupera as metas do localStorage
             const allGoals = JSON.parse(localStorage.getItem('goals')) || [];
-
-            // Obtém os valores dos filtros
-            const statusFilter = document.getElementById('filter-status').value;
+            const statusFilter    = document.getElementById('filter-status').value;
             const prioridadeFilter = document.getElementById('filter-prioridade').value;
             const categoriaFilter = document.getElementById('filter-categoria').value.toLowerCase();
-            const sortDate = document.getElementById('sort-date').value;
+            const sortDate        = document.getElementById('sort-date').value;
 
-            // Cria uma lista de metas com índices originais
             let goalsWithIndex = allGoals.map((goal, index) => ({ ...goal, originalIndex: index }));
+            if (statusFilter)    goalsWithIndex = goalsWithIndex.filter(item => getStatus(item) === statusFilter);
+            if (prioridadeFilter) goalsWithIndex = goalsWithIndex.filter(item => item.prioridade === prioridadeFilter);
+            if (categoriaFilter) goalsWithIndex = goalsWithIndex.filter(item => item.categoria && item.categoria.toLowerCase().includes(categoriaFilter));
+            if (sortDate === 'asc')  goalsWithIndex.sort((a, b) => new Date(a.date) - new Date(b.date));
+            if (sortDate === 'desc') goalsWithIndex.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-            // Filtra por status
-            if (statusFilter) {
-                goalsWithIndex = goalsWithIndex.filter(item => getStatus(item) === statusFilter);
-            }
-
-            // Filtra por prioridade
-            if (prioridadeFilter) {
-                goalsWithIndex = goalsWithIndex.filter(item => item.prioridade === prioridadeFilter);
-            }
-
-            // Filtra por categoria
-            if (categoriaFilter) {
-                goalsWithIndex = goalsWithIndex.filter(item => item.categoria && item.categoria.toLowerCase().includes(categoriaFilter));
-            }
-
-            // Ordena por data se selecionado
-            if (sortDate === 'asc') {
-                goalsWithIndex.sort((a, b) => new Date(a.date) - new Date(b.date));
-            } else if (sortDate === 'desc') {
-                goalsWithIndex.sort((a, b) => new Date(b.date) - new Date(a.date));
-            }
-
-            // Renderiza lista
             renderGoalsList(goalsWithIndex);
-            // Renderiza cards
             renderGoalsCards(goalsWithIndex);
-
-            // Anexa os event listeners aos elementos
             attachListeners();
-            // Atualiza o progresso
-            updateProgress();
-            // Atualiza o calendário para dias com metas
+            updateProgress(allGoals);
             refreshCalendar();
         }
 
-        // Função para renderizar metas como lista
         function renderGoalsList(goalsWithIndex) {
-            // Seleciona a lista onde as metas serão exibidas
             const ul = document.querySelector('#goals-list-container ul');
-            // Limpa o conteúdo atual da lista
             ul.innerHTML = '';
-            // Para cada meta filtrada, cria um item de lista
             goalsWithIndex.forEach((item, filteredIndex) => {
-                // Determina o status da meta
-                const status = getStatus(item);
-                // Cria o elemento li
+                const status   = getStatus(item);
+                const subtasks = item.subtasks || [];
+                const doneSubs = subtasks.filter(s => s.done).length;
                 const li = document.createElement('li');
-                // Define o HTML interno do li
                 li.innerHTML = `
                     <div class="meta-header">
                         <h3>${item.title}</h3>
@@ -685,43 +747,47 @@
                         <p>Data Limite: ${item.date}</p>
                         <p>Prioridade: ${item.prioridade ? item.prioridade.charAt(0).toUpperCase() + item.prioridade.slice(1) : 'Não definida'}</p>
                         <p>Categoria: ${item.categoria || 'Não definida'}</p>
+                        ${subtasks.length > 0 ? `<p class="subtask-progress">Subtarefas: ${doneSubs}/${subtasks.length} concluídas</p>` : ''}
                         <div class="meta-actions">
                             <input type="checkbox" id="meta${filteredIndex}" data-index="${item.originalIndex}" ${item.completed ? 'checked' : ''}>
                             <label for="meta${filteredIndex}">Concluída</label>
                             ${!item.started ? `<button class="start-btn" data-index="${item.originalIndex}">Iniciar</button>` : ''}
                             <button class="focus-btn" data-title="${item.title}" data-nivel="${item.nivelFoco || 2}">Modo Foco</button>
+                            <button class="edit-btn" data-index="${item.originalIndex}">✏️ Editar</button>
                             <button class="delete-btn" data-index="${item.originalIndex}">Excluir</button>
                         </div>
+                        <div id="subtasks-list-${item.originalIndex}"></div>
                     </div>
                 `;
-                // Adiciona o li à lista
                 ul.appendChild(li);
+                renderSubtasks(item, item.originalIndex, document.getElementById(`subtasks-list-${item.originalIndex}`));
             });
         }
 
-        // Função para renderizar metas como cards
         function renderGoalsCards(goalsWithIndex) {
             const cardsContainer = document.getElementById('goalsCards');
             cardsContainer.innerHTML = '';
-
             goalsWithIndex.forEach((item, filteredIndex) => {
-                const status = getStatus(item);
+                const status   = getStatus(item);
+                const subtasks = item.subtasks || [];
+                const doneSubs = subtasks.filter(s => s.done).length;
                 let statusClass = 'not-started';
                 if (status === 'Concluída') statusClass = 'completed';
                 else if (status === 'Atrasada') statusClass = 'overdue';
                 else if (status === 'Em Andamento') statusClass = 'in-progress';
-
                 const card = document.createElement('div');
                 card.className = `goal-card ${statusClass}`;
                 card.innerHTML = `
                     <div class="goal-card-title">${item.title}</div>
                     <div class="goal-card-status">${status}</div>
-                    <div class="goal-card-date">📅 ${item.date}</div>
+                    <div class="goal-card-date">📅 ${item.date || 'Sem data'}</div>
+                    ${subtasks.length > 0 ? `<div class="subtask-progress">Subtarefas: ${doneSubs}/${subtasks.length}</div>` : ''}
                     <div class="goal-card-actions">
                         <input type="checkbox" class="goal-card-checkbox" id="card-meta${filteredIndex}" data-index="${item.originalIndex}" ${item.completed ? 'checked' : ''}>
                         <label for="card-meta${filteredIndex}">✓</label>
                         ${!item.started ? `<button class="start-btn" data-index="${item.originalIndex}">▶</button>` : ''}
                         <button class="focus-btn" data-title="${item.title}" data-nivel="${item.nivelFoco || 2}">🎯</button>
+                        <button class="edit-btn" data-index="${item.originalIndex}">✏️</button>
                         <button class="delete-btn" data-index="${item.originalIndex}">🗑️</button>
                     </div>
                 `;
@@ -729,704 +795,332 @@
             });
         }
 
-        // Função para anexar event listeners aos elementos dinâmicos
         function attachListeners() {
-            // Para cada checkbox de meta na lista
-            document.querySelectorAll('#goals-list-container input[type="checkbox"]').forEach((checkbox) => {
-                // Adiciona listener para mudança de estado
-                checkbox.addEventListener('change', () => {
-                    // Obtém o índice da meta
-                    const index = parseInt(checkbox.dataset.index);
-                    // Recupera as metas
-                    const goals = JSON.parse(localStorage.getItem('goals')) || [];
-                    // Atualiza o status de concluída
-                    goals[index].completed = checkbox.checked;
-                    // Define como iniciada
-                    goals[index].started = true;
-                    // Define timestamps se necessário
-                    if (!goals[index].startedAt) goals[index].startedAt = new Date().toISOString();
-                    if (checkbox.checked && !goals[index].completedAt) goals[index].completedAt = new Date().toISOString();
-                    if (!checkbox.checked) goals[index].completedAt = null;
-                    // Salva no localStorage
-                    localStorage.setItem('goals', JSON.stringify(goals));
-                    // Mostra power-up de conclusão se foi marcado
-                    if (checkbox.checked) {
-                        showPowerUp('complete');
-                    }
-                    // Renderiza novamente
-                    renderGoals();
-                    // Atualiza estatísticas emocionais
-                    updateUserStats();
-                });
-            });
-
-            // Para cada checkbox de meta nos cards
-            document.querySelectorAll('#goals-cards-container input[type="checkbox"]').forEach((checkbox) => {
+            // Checkboxes lista
+            document.querySelectorAll('#goals-list-container input[type="checkbox"]').forEach(checkbox => {
                 checkbox.addEventListener('change', () => {
                     const index = parseInt(checkbox.dataset.index);
                     const goals = JSON.parse(localStorage.getItem('goals')) || [];
                     goals[index].completed = checkbox.checked;
-                    goals[index].started = true;
+                    goals[index].started   = true;
                     if (!goals[index].startedAt) goals[index].startedAt = new Date().toISOString();
                     if (checkbox.checked && !goals[index].completedAt) goals[index].completedAt = new Date().toISOString();
                     if (!checkbox.checked) goals[index].completedAt = null;
                     localStorage.setItem('goals', JSON.stringify(goals));
-                    if (checkbox.checked) {
-                        showPowerUp('complete');
-                    }
-                    renderGoals();
-                    updateUserStats();
+                    if (checkbox.checked) showPowerUp('complete');
+                    renderGoals(); updateUserStats();
                 });
             });
-
-            // Para cada botão de iniciar na lista
-            document.querySelectorAll('#goals-list-container .start-btn').forEach(btn => {
-                // Adiciona listener para clique
-                btn.addEventListener('click', function() {
-                    // Obtém o índice da meta
-                    const index = parseInt(this.dataset.index);
-                    // Recupera as metas
+            // Checkboxes cards
+            document.querySelectorAll('#goals-cards-container input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', () => {
+                    const index = parseInt(checkbox.dataset.index);
                     const goals = JSON.parse(localStorage.getItem('goals')) || [];
-                    // Define como iniciada
-                    goals[index].started = true;
-                    // Define timestamp se necessário
+                    goals[index].completed = checkbox.checked;
+                    goals[index].started   = true;
                     if (!goals[index].startedAt) goals[index].startedAt = new Date().toISOString();
-                    // Salva
+                    if (checkbox.checked && !goals[index].completedAt) goals[index].completedAt = new Date().toISOString();
+                    if (!checkbox.checked) goals[index].completedAt = null;
                     localStorage.setItem('goals', JSON.stringify(goals));
-                    // Mostra power-up de início
-                    showPowerUp('start');
-                    // Renderiza
-                    renderGoals();
-                    // Atualiza estatísticas emocionais
-                    updateUserStats();
+                    if (checkbox.checked) showPowerUp('complete');
+                    renderGoals(); updateUserStats();
                 });
             });
-
-            // Para cada botão de iniciar nos cards
-            document.querySelectorAll('#goals-cards-container .start-btn').forEach(btn => {
+            // Start buttons
+            document.querySelectorAll('#goals-list-container .start-btn, #goals-cards-container .start-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const index = parseInt(this.dataset.index);
                     const goals = JSON.parse(localStorage.getItem('goals')) || [];
                     goals[index].started = true;
                     if (!goals[index].startedAt) goals[index].startedAt = new Date().toISOString();
                     localStorage.setItem('goals', JSON.stringify(goals));
-                    showPowerUp('start');
-                    renderGoals();
-                    updateUserStats();
+                    showPowerUp('start'); renderGoals(); updateUserStats();
                 });
             });
-
-            // Para cada botão de excluir na lista
-            document.querySelectorAll('#goals-list-container .delete-btn').forEach(btn => {
-                // Adiciona listener para clique
-                btn.addEventListener('click', function() {
-                    // Obtém o índice
-                    const index = parseInt(this.dataset.index);
-                    // Recupera as metas
-                    const goals = JSON.parse(localStorage.getItem('goals')) || [];
-                    // Remove a meta do array
-                    goals.splice(index, 1);
-                    // Salva
-                    localStorage.setItem('goals', JSON.stringify(goals));
-                    // Renderiza
-                    renderGoals();
-                });
-            });
-
-            // Para cada botão de excluir nos cards
-            document.querySelectorAll('#goals-cards-container .delete-btn').forEach(btn => {
+            // Delete buttons
+            document.querySelectorAll('#goals-list-container .delete-btn, #goals-cards-container .delete-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const index = parseInt(this.dataset.index);
                     const goals = JSON.parse(localStorage.getItem('goals')) || [];
                     goals.splice(index, 1);
                     localStorage.setItem('goals', JSON.stringify(goals));
-                    renderGoals();
+                    renderGoals(); checkDeadlines();
                 });
             });
-
-            // Para cada botão de toggle
+            // Edit buttons
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    openEditModal(parseInt(this.dataset.index));
+                });
+            });
+            // Toggle details
             document.querySelectorAll('.toggle-details').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const index = this.dataset.index;
+                    const index   = this.dataset.index;
                     const details = document.getElementById(`details${index}`);
-                    if (details.style.display === 'none') {
-                        details.style.display = 'block';
-                        this.textContent = '▲';
-                    } else {
-                        details.style.display = 'none';
-                        this.textContent = '▼';
-                    }
+                    if (details.style.display === 'none') { details.style.display = 'block'; this.textContent = '▲'; }
+                    else { details.style.display = 'none'; this.textContent = '▼'; }
                 });
             });
-
-            // Para cada botão de modo foco
+            // Focus buttons
             document.querySelectorAll('.focus-btn').forEach(btn => {
                 if (btn.textContent !== 'Pausar' && btn.textContent !== 'Retomar' && btn.textContent !== 'Sair do Modo Foco') {
                     btn.addEventListener('click', function() {
-                        const goalTitle = this.dataset.title;
-                        const nivelFoco = parseInt(this.dataset.nivel) || 2;
-                        startFocusMode(goalTitle, nivelFoco);
+                        startFocusMode(this.dataset.title, parseInt(this.dataset.nivel) || 2);
                     });
                 }
             });
         }
 
-        // Função para atualizar o progresso geral
-        function updateProgress() {
-            // Recupera as metas do localStorage
-            const goals = JSON.parse(localStorage.getItem('goals')) || [];
-            // Conta o total de metas
-            const total = goals.length;
-            // Conta as concluídas
+        // ── Progresso (com histórico acumulado) ────────────────────────────
+        function updateProgress(goals) {
+            if (!goals) goals = JSON.parse(localStorage.getItem('goals')) || [];
+            const total   = goals.length;
             const checked = goals.filter(g => g.completed).length;
-            // Calcula a porcentagem
             const percentage = total > 0 ? (checked / total) * 100 : 0;
-            // Atualiza o texto do progresso
+
+            // Atualiza histórico acumulado
+            updateHistoricTotal(goals);
+            const historic = getHistoricTotal();
+
             document.getElementById('progress-text').textContent = `Metas concluídas: ${checked} de ${total}`;
-            // Atualiza a barra de progresso
             document.getElementById('progress-bar').value = percentage;
-            // Computa as análises
+            document.getElementById('progress-historic').textContent =
+                historic > checked ? `Total histórico acumulado: ${historic} metas concluídas (mesmo após exclusões)` : '';
+
             computeAnalytics(goals);
-            // Verifica conquistas
             checkAchievements(goals);
         }
 
-        // Função VERIFICAR CONQUISTAS 
         function checkAchievements(goals) {
             const achievements = JSON.parse(localStorage.getItem('achievements')) || [];
             const now = new Date();
-            
-            // Conquista: 25 metas concluídas semanalmente
-            const thisWeekStart = getWeekStart(now);
-            const completedThisWeek = goals.filter(g => g.completed && g.completedAt && new Date(g.completedAt) >= thisWeekStart).length;
-            if (completedThisWeek >= 25 && !achievements.includes('weekly-25')) {
-                achievements.push('weekly-25');
-                showAchievement('weekly-25');
-            }
-            
-            // Conquista: 50 metas concluídas semanalmente
-            if (completedThisWeek >= 50 && !achievements.includes('weekly-50')) {
-                achievements.push('weekly-50');
-                showAchievement('weekly-50');
-            }
-            
-            // Conquista: 75 metas concluídas semanalmente
-            if (completedThisWeek >= 75 && !achievements.includes('weekly-75')) {
-                achievements.push('weekly-75');
-                showAchievement('weekly-75');
-            }
-            
-            // Conquista: 25 metas concluídas mensalmente
+            const thisWeekStart  = getWeekStart(now);
             const thisMonthStart = getMonthStart(now);
+            const completedThisWeek  = goals.filter(g => g.completed && g.completedAt && new Date(g.completedAt) >= thisWeekStart).length;
             const completedThisMonth = goals.filter(g => g.completed && g.completedAt && new Date(g.completedAt) >= thisMonthStart).length;
-            if (completedThisMonth >= 25 && !achievements.includes('monthly-25')) {
-                achievements.push('monthly-25');
-                showAchievement('monthly-25');
-            }
-            
-            // Conquista: 50 metas concluídas mensalmente
-            if (completedThisMonth >= 50 && !achievements.includes('monthly-50')) {
-                achievements.push('monthly-50');
-                showAchievement('monthly-50');
-            }
-            
-            // Conquista: 75 metas concluídas mensalmente
-            if (completedThisMonth >= 75 && !achievements.includes('monthly-75')) {
-                achievements.push('monthly-75');
-                showAchievement('monthly-75');
-            }
-            
-            // Conquista: 100 metas criadas
-            if (goals.length >= 100 && !achievements.includes('created-100')) {
-                achievements.push('created-100');
-                showAchievement('created-100');
-            }
-            
-            // Conquista: Primeira meta criada
-            if (goals.length >= 1 && !achievements.includes('first-goal')) {
-                achievements.push('first-goal');
-                showAchievement('first-goal');
-            }
-            
+
+            const checks = [
+                { id: 'weekly-25',  condition: completedThisWeek >= 25 },
+                { id: 'weekly-50',  condition: completedThisWeek >= 50 },
+                { id: 'weekly-75',  condition: completedThisWeek >= 75 },
+                { id: 'monthly-25', condition: completedThisMonth >= 25 },
+                { id: 'monthly-50', condition: completedThisMonth >= 50 },
+                { id: 'monthly-75', condition: completedThisMonth >= 75 },
+                { id: 'created-100',condition: goals.length >= 100 },
+                { id: 'first-goal', condition: goals.length >= 1 },
+            ];
+            checks.forEach(({ id, condition }) => {
+                if (condition && !achievements.includes(id)) { achievements.push(id); showAchievement(id); }
+            });
             localStorage.setItem('achievements', JSON.stringify(achievements));
             renderAchievements(achievements);
         }
 
-        // Função para formatar datas
         function showAchievement(achievementId) {
             const achievementData = {
-                'weekly-25': { title: '🏅 Mestre Semanal', description: '25 metas concluídas nesta semana!' },
-                'weekly-50': { title: '🥇 Campeão Semanal', description: '50 metas concluídas nesta semana!' },
-                'weekly-75': { title: '👑 Rei Semanal', description: '75 metas concluídas nesta semana!' },
-                'monthly-25': { title: '🏅 Mestre Mensal', description: '25 metas concluídas neste mês!' },
-                'monthly-50': { title: '🥇 Campeão Mensal', description: '50 metas concluídas neste mês!' },
-                'monthly-75': { title: '👑 Rei Mensal', description: '75 metas concluídas neste mês!' },
-                'created-100': { title: '🎯 Criador Prolífico', description: '100 metas criadas!' },
-                'first-goal': { title: '🎉 Primeira Meta', description: 'Sua primeira meta foi criada!' }
+                'weekly-25':  { title: '🏅 Mestre Semanal',   description: '25 metas concluídas nesta semana!' },
+                'weekly-50':  { title: '🥇 Campeão Semanal',  description: '50 metas concluídas nesta semana!' },
+                'weekly-75':  { title: '👑 Rei Semanal',       description: '75 metas concluídas nesta semana!' },
+                'monthly-25': { title: '🏅 Mestre Mensal',    description: '25 metas concluídas neste mês!' },
+                'monthly-50': { title: '🥇 Campeão Mensal',   description: '50 metas concluídas neste mês!' },
+                'monthly-75': { title: '👑 Rei Mensal',        description: '75 metas concluídas neste mês!' },
+                'created-100':{ title: '🎯 Criador Prolífico', description: '100 metas criadas!' },
+                'first-goal': { title: '🎉 Primeira Meta',    description: 'Sua primeira meta foi criada!' }
             };
-            
             const data = achievementData[achievementId];
             if (data) {
                 const notification = document.createElement('div');
                 notification.className = 'achievement-notification';
-                notification.innerHTML = `
-                    <div class="achievement-icon">${data.title.split(' ')[0]}</div>
-                    <div class="achievement-text">
-                        <h4>${data.title}</h4>
-                        <p>${data.description}</p>
-                    </div>
-                `;
+                notification.innerHTML = `<div class="achievement-icon">${data.title.split(' ')[0]}</div><div class="achievement-text"><h4>${data.title}</h4><p>${data.description}</p></div>`;
                 document.body.appendChild(notification);
-                
                 setTimeout(() => {
                     notification.classList.add('show');
-                    setTimeout(() => {
-                        notification.classList.remove('show');
-                        setTimeout(() => notification.remove(), 500);
-                    }, 3000);
+                    setTimeout(() => { notification.classList.remove('show'); setTimeout(() => notification.remove(), 500); }, 3000);
                 }, 100);
             }
         }
 
-        // Função para renderizar conquistas
         function renderAchievements(achievements) {
             const grid = document.getElementById('achievementsGrid');
             if (!grid) return;
-            
             const achievementData = {
-                'weekly-25': { icon: '🏅', title: 'Mestre Semanal', desc: '25 metas/semana', color: '#FFD700' },
-                'weekly-50': { icon: '🥇', title: 'Campeão Semanal', desc: '50 metas/semana', color: '#C0C0C0' },
-                'weekly-75': { icon: '👑', title: 'Rei Semanal', desc: '75 metas/semana', color: '#FFD700' },
-                'monthly-25': { icon: '🏅', title: 'Mestre Mensal', desc: '25 metas/mês', color: '#FFD700' },
-                'monthly-50': { icon: '🥇', title: 'Campeão Mensal', desc: '50 metas/mês', color: '#C0C0C0' },
-                'monthly-75': { icon: '👑', title: 'Rei Mensal', desc: '75 metas/mês', color: '#FFD700' },
-                'created-100': { icon: '🎯', title: 'Criador Prolífico', desc: '100 metas criadas', color: '#FF6B6B' },
-                'first-goal': { icon: '🎉', title: 'Primeira Meta', desc: 'Sua primeira meta!', color: '#4ECDC4' }
+                'weekly-25':  { icon: '🏅', title: 'Mestre Semanal',    desc: '25 metas/semana', color: '#FFD700' },
+                'weekly-50':  { icon: '🥇', title: 'Campeão Semanal',   desc: '50 metas/semana', color: '#C0C0C0' },
+                'weekly-75':  { icon: '👑', title: 'Rei Semanal',        desc: '75 metas/semana', color: '#FFD700' },
+                'monthly-25': { icon: '🏅', title: 'Mestre Mensal',     desc: '25 metas/mês',    color: '#FFD700' },
+                'monthly-50': { icon: '🥇', title: 'Campeão Mensal',    desc: '50 metas/mês',    color: '#C0C0C0' },
+                'monthly-75': { icon: '👑', title: 'Rei Mensal',         desc: '75 metas/mês',    color: '#FFD700' },
+                'created-100':{ icon: '🎯', title: 'Criador Prolífico',  desc: '100 metas criadas', color: '#FF6B6B' },
+                'first-goal': { icon: '🎉', title: 'Primeira Meta',     desc: 'Sua primeira meta!', color: '#4ECDC4' }
             };
-            
             grid.innerHTML = '';
-            
-            if (achievements.length === 0) {
-                grid.innerHTML = '<p class="no-achievements">Nenhuma conquista desbloqueada ainda. Continue trabalhando nas suas metas! 💪</p>';
-                return;
-            }
-            
+            if (achievements.length === 0) { grid.innerHTML = '<p class="no-achievements">Nenhuma conquista desbloqueada ainda. Continue trabalhando nas suas metas! 💪</p>'; return; }
             achievements.forEach(achievement => {
                 const data = achievementData[achievement];
                 if (data) {
                     const medal = document.createElement('div');
                     medal.className = 'achievement-medal unlocked';
-                    medal.innerHTML = `
-                        <div class="medal-icon" style="color: ${data.color}">${data.icon}</div>
-                        <h4>${data.title}</h4>
-                        <p>${data.desc}</p>
-                    `;
+                    medal.innerHTML = `<div class="medal-icon" style="color: ${data.color}">${data.icon}</div><h4>${data.title}</h4><p>${data.desc}</p>`;
                     grid.appendChild(medal);
                 }
             });
         }
 
-        // Função para formatar datas
-        function formatDate(date) {
-            // Retorna a data no formato YYYY-MM-DD
-            return date.toISOString().split('T')[0];
-        }
+        function formatDate(date)    { return date.toISOString().split('T')[0]; }
+        function getWeekStart(date)  { const d = new Date(date), day = d.getDay(), diff = d.getDate() - day + (day === 0 ? -6 : 1); return new Date(d.setDate(diff)); }
+        function getMonthStart(date) { const d = new Date(date); d.setDate(1); return d; }
 
-        // Função para obter o início da semana (segunda-feira)
-        function getWeekStart(date) {
-            // Cria uma cópia da data
-            const d = new Date(date);
-            // Calcula o dia da semana (0=domingo, 1=segunda, etc.)
-            const day = d.getDay();
-            // Calcula o deslocamento para segunda-feira
-            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-            // Retorna a data da segunda-feira
-            return new Date(d.setDate(diff));
-        }
-
-        // Função para obter o início do mês
-        function getMonthStart(date) {
-            // Cria uma cópia da data
-            const d = new Date(date);
-            // Define o dia como 1
-            d.setDate(1);
-            // Retorna o início do mês
-            return d;
-        }
-
-        // Função para computar análises de metas
         function computeAnalytics(goals) {
-            // Obtém a data atual
             const now = new Date();
-            // Calcula o início da semana atual
-            const thisWeekStart = getWeekStart(now);
-            // Calcula o início da semana passada
-            const lastWeekStart = new Date(thisWeekStart);
-            lastWeekStart.setDate(lastWeekStart.getDate() - 7);
-            // Calcula o fim da semana atual
-            const nextWeekStart = new Date(thisWeekStart);
-            nextWeekStart.setDate(nextWeekStart.getDate() + 7);
-
-            // Calcula o início do mês atual
+            const thisWeekStart  = getWeekStart(now);
+            const lastWeekStart  = new Date(thisWeekStart); lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+            const nextWeekStart  = new Date(thisWeekStart); nextWeekStart.setDate(nextWeekStart.getDate() + 7);
             const thisMonthStart = getMonthStart(now);
-            // Calcula o início do mês passado
-            const lastMonthStart = new Date(thisMonthStart);
-            lastMonthStart.setMonth(lastMonthStart.getMonth() - 1);
-            // Calcula o fim do mês atual
-            const nextMonthStart = new Date(thisMonthStart);
-            nextMonthStart.setMonth(nextMonthStart.getMonth() + 1);
+            const lastMonthStart = new Date(thisMonthStart); lastMonthStart.setMonth(lastMonthStart.getMonth() - 1);
+            const nextMonthStart = new Date(thisMonthStart); nextMonthStart.setMonth(nextMonthStart.getMonth() + 1);
 
-            // Conta metas concluídas nesta semana
-            const completedThisWeek = goals.filter(g => g.completed && g.completedAt && new Date(g.completedAt) >= thisWeekStart && new Date(g.completedAt) < nextWeekStart).length;
-            // Conta metas concluídas na semana passada
-            const completedLastWeek = goals.filter(g => g.completed && g.completedAt && new Date(g.completedAt) >= lastWeekStart && new Date(g.completedAt) < thisWeekStart).length;
-            // Conta metas concluídas neste mês
+            const completedThisWeek  = goals.filter(g => g.completed && g.completedAt && new Date(g.completedAt) >= thisWeekStart  && new Date(g.completedAt) < nextWeekStart).length;
+            const completedLastWeek  = goals.filter(g => g.completed && g.completedAt && new Date(g.completedAt) >= lastWeekStart  && new Date(g.completedAt) < thisWeekStart).length;
             const completedThisMonth = goals.filter(g => g.completed && g.completedAt && new Date(g.completedAt) >= thisMonthStart && new Date(g.completedAt) < nextMonthStart).length;
-            // Conta metas concluídas no mês passado
             const completedLastMonth = goals.filter(g => g.completed && g.completedAt && new Date(g.completedAt) >= lastMonthStart && new Date(g.completedAt) < thisMonthStart).length;
 
-            // Atualiza os elementos com os valores calculados
-            document.getElementById('concluidas-semana').textContent = `${completedThisWeek} metas concluídas nesta semana`;
-            document.getElementById('comparativo-semana').textContent = `Semana passada: ${completedLastWeek} (${Math.round(((completedThisWeek - completedLastWeek) / (completedLastWeek || 1)) * 100)}%)`;
-            document.getElementById('concluidas-mes').textContent = `${completedThisMonth} metas concluídas neste mês`;
-            document.getElementById('comparativo-mes').textContent = `Mês passado: ${completedLastMonth} (${Math.round(((completedThisMonth - completedLastMonth) / (completedLastMonth || 1)) * 100)}%)`;
-
-            // Desenha os gráficos
+            document.getElementById('concluidas-semana').textContent   = `${completedThisWeek} metas concluídas nesta semana`;
+            document.getElementById('comparativo-semana').textContent  = `Semana passada: ${completedLastWeek} (${Math.round(((completedThisWeek - completedLastWeek) / (completedLastWeek || 1)) * 100)}%)`;
+            document.getElementById('concluidas-mes').textContent      = `${completedThisMonth} metas concluídas neste mês`;
+            document.getElementById('comparativo-mes').textContent     = `Mês passado: ${completedLastMonth} (${Math.round(((completedThisMonth - completedLastMonth) / (completedLastMonth || 1)) * 100)}%)`;
             drawCharts(goals);
         }
 
-        // Variáveis globais para os gráficos
-        let weeklyChart = null;
-        let monthlyChart = null;
+        let weeklyChart = null, monthlyChart = null;
 
-        // Função para desenhar os gráficos
         function drawCharts(goals) {
-            // Obtém a data atual
             const now = new Date();
-            // Arrays para rótulos e contagens semanais
-            const weekLabels = [];
-            const weekCount = [0, 0, 0, 0];
-            // Calcula o início da primeira semana (4 semanas atrás)
-            const dateStart = new Date(getWeekStart(now));
+            const weekLabels = [], weekCount = [0,0,0,0];
+            const dateStart  = new Date(getWeekStart(now));
             dateStart.setDate(dateStart.getDate() - 21);
-
-            // Para cada uma das 4 semanas
             for (let i = 0; i < 4; i++) {
-                // Calcula o início da semana
-                const start = new Date(dateStart);
-                start.setDate(start.getDate() + i * 7);
-                // Calcula o fim da semana
-                const end = new Date(start);
-                end.setDate(start.getDate() + 7);
-                // Adiciona o rótulo
+                const start = new Date(dateStart); start.setDate(start.getDate() + i * 7);
+                const end   = new Date(start);     end.setDate(start.getDate() + 7);
                 weekLabels.push(`${formatDate(start)} - ${formatDate(new Date(end.setDate(end.getDate()-1)))}`);
-                // Conta metas concluídas nessa semana
                 weekCount[i] = goals.filter(g => g.completed && g.completedAt && new Date(g.completedAt) >= start && new Date(g.completedAt) < end).length;
             }
-
-            // Arrays para rótulos e contagens mensais
-            const monthLabels = [];
-            const monthCount = [];
-            // Calcula o início do primeiro mês (6 meses atrás)
-            const firstMonth = new Date(now.getFullYear(), now.getMonth() - 5, 1);
-            // Para cada um dos 6 meses
+            const monthLabels = [], monthCount = [];
+            const firstMonth  = new Date(now.getFullYear(), now.getMonth() - 5, 1);
             for (let i = 0; i < 6; i++) {
-                // Calcula o início do mês
                 const mStart = new Date(firstMonth.getFullYear(), firstMonth.getMonth() + i, 1);
-                // Calcula o fim do mês
-                const mEnd = new Date(mStart.getFullYear(), mStart.getMonth() + 1, 1);
-                // Adiciona o rótulo (mês abreviado e ano)
+                const mEnd   = new Date(mStart.getFullYear(), mStart.getMonth() + 1, 1);
                 monthLabels.push(mStart.toLocaleString('pt-BR', { month: 'short', year: 'numeric' }));
-                // Conta metas concluídas nesse mês
                 monthCount.push(goals.filter(g => g.completed && g.completedAt && new Date(g.completedAt) >= mStart && new Date(g.completedAt) < mEnd).length);
             }
-
-            // Destrói o gráfico semanal anterior se existir
-            if (weeklyChart) weeklyChart.destroy();
-            // Cria o gráfico semanal
-            weeklyChart = new Chart(document.getElementById('weeklyChart'), {
-                type: 'line',
-                data: {
-                    labels: weekLabels,
-                    datasets: [{
-                        label: 'Concluídas',
-                        data: weekCount,
-                        borderColor: '#ff00ff',
-                        backgroundColor: 'rgba(187, 134, 252, 0.2)',
-                        tension: 0.3,
-                        fill: true
-                    }]
-                },
-                options: { responsive: true, scales: { y: { beginAtZero: true } } }
-            });
-
-            // Destrói o gráfico mensal anterior se existir
+            if (weeklyChart)  weeklyChart.destroy();
             if (monthlyChart) monthlyChart.destroy();
-            // Cria o gráfico mensal
-            monthlyChart = new Chart(document.getElementById('monthlyChart'), {
-                type: 'bar',
-                data: {
-                    labels: monthLabels,
-                    datasets: [{
-                        label: 'Concluídas',
-                        data: monthCount,
-                        backgroundColor: '#03dac6'
-                    }]
-                },
-                options: { responsive: true, scales: { y: { beginAtZero: true } } }
-            });
+            weeklyChart = new Chart(document.getElementById('weeklyChart'), { type: 'line', data: { labels: weekLabels, datasets: [{ label: 'Concluídas', data: weekCount, borderColor: '#ff00ff', backgroundColor: 'rgba(187,134,252,0.2)', tension: 0.3, fill: true }] }, options: { responsive: true, scales: { y: { beginAtZero: true } } } });
+            monthlyChart = new Chart(document.getElementById('monthlyChart'), { type: 'bar', data: { labels: monthLabels, datasets: [{ label: 'Concluídas', data: monthCount, backgroundColor: '#03dac6' }] }, options: { responsive: true, scales: { y: { beginAtZero: true } } } });
         }
 
-        // Inicialização do calendário e filtros
-        setupCalendarControls();
-        renderCalendar();
+        // ── Pomodoro ────────────────────────────────────────────────────────
+        let pomodoroInterval = null, pomodoroTime = 25 * 60, isPaused = false;
 
-        // Renderiza as metas na inicialização
-        renderGoals();
-
-        // Event listeners para toggle de visualização
-        document.getElementById('list-view').addEventListener('click', () => {
-            document.getElementById('goals-list-container').style.display = 'block';
-            document.getElementById('goals-cards-container').style.display = 'none';
-            document.getElementById('list-view').classList.add('active');
-            document.getElementById('cards-view').classList.remove('active');
-        });
-
-        document.getElementById('cards-view').addEventListener('click', () => {
-            document.getElementById('goals-list-container').style.display = 'none';
-            document.getElementById('goals-cards-container').style.display = 'block';
-            document.getElementById('cards-view').classList.add('active');
-            document.getElementById('list-view').classList.remove('active');
-        });
-
-        // Event listeners para filtros
-        document.getElementById('filter-status').addEventListener('change', renderGoals);
-        document.getElementById('filter-prioridade').addEventListener('change', renderGoals);
-        document.getElementById('filter-categoria').addEventListener('input', renderGoals);
-        document.getElementById('sort-date').addEventListener('change', renderGoals);
-
-        // SISTEMA EMOCIONAL INTELIGENTE
-        // Função para obter o estado emocional baseado nas estatísticas
-        function getEmotionalState(stats) {
-            const { completedToday, missedToday, streak } = stats;
-            if (streak >= 7 || (completedToday > missedToday && streak >= 3)) {
-                return 'motivado';
-            } else if (missedToday > completedToday * 2 || streak === 0) {
-                return 'dificuldade';
-            } else {
-                return 'neutro';
-            }
-        }
-
-        // Função para obter mensagem emocional personalizada
-        function getEmotionalMessage(stats, userName = 'Você') {
-            const state = getEmotionalState(stats);
-            const { completedToday, missedToday, streak } = stats;
-
-            switch (state) {
-                case 'motivado':
-                    if (streak >= 10) {
-                        return `🎉 ${userName}, você está arrasando! Sequência de ${streak} dias produtivos. Continue brilhando! ✨`;
-                    } else {
-                        return `🔥 ${userName}, você está no fogo! Sequência de ${streak} dias. Mantenha o ritmo! 💪`;
-                    }
-                case 'neutro':
-                    return `💙 ${userName}, você está indo bem. Lembre-se: cada passo conta. 🌱`;
-                case 'dificuldade':
-                    if (missedToday > 0) {
-                        return `💙 ${userName}, está tudo bem errar às vezes. Amanhã é um novo dia para recomeçar. 🌟`;
-                    } else {
-                        return `💙 ${userName}, respire fundo. Pequenos progressos levam a grandes conquistas. ✨`;
-                    }
-                default:
-                    return `💙 ${userName}, continue focado em suas metas. Você consegue! 🌱`;
-            }
-        }
-
-        // Função para calcular estatísticas do usuário
-        function calculateUserStats() {
-            const goals = JSON.parse(localStorage.getItem('goals')) || [];
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            let completedToday = 0;
-            let missedToday = 0;
-            let streak = 0;
-            let lastActive = new Date(localStorage.getItem('lastActive') || today.toISOString());
-
-            // Calcular metas concluídas e perdidas hoje
-            goals.forEach(goal => {
-                if (goal.completed && goal.completedAt) {
-                    const completedDate = new Date(goal.completedAt);
-                    completedDate.setHours(0, 0, 0, 0);
-                    if (completedDate.getTime() === today.getTime()) {
-                        completedToday++;
-                    }
-                }
-                if (!goal.completed && goal.date) {
-                    const dueDate = new Date(goal.date);
-                    dueDate.setHours(0, 0, 0, 0);
-                    if (dueDate.getTime() < today.getTime()) {
-                        missedToday++;
-                    }
-                }
-            });
-
-            // Calcular streak (dias consecutivos com pelo menos uma meta concluída)
-            const streakData = JSON.parse(localStorage.getItem('streakData')) || { current: 0, lastDate: null };
-            const lastStreakDate = streakData.lastDate ? new Date(streakData.lastDate) : null;
-            lastStreakDate?.setHours(0, 0, 0, 0);
-
-            if (completedToday > 0) {
-                if (lastStreakDate && (today.getTime() - lastStreakDate.getTime()) === 86400000) {
-                    streak = streakData.current + 1;
-                } else if (!lastStreakDate || (today.getTime() - lastStreakDate.getTime()) > 86400000) {
-                    streak = 1;
-                } else {
-                    streak = streakData.current;
-                }
-            } else {
-                streak = 0; // Reset streak se não completou nada hoje
-            }
-
-            return { completedToday, missedToday, streak, lastActive };
-        }
-
-        // Função para atualizar estatísticas e interface
-        function updateUserStats(userName = 'Você') {
-            const stats = calculateUserStats();
-            const state = getEmotionalState(stats);
-            const message = getEmotionalMessage(stats, userName);
-
-            // Salvar dados no localStorage
-            localStorage.setItem('userStats', JSON.stringify(stats));
-            localStorage.setItem('lastActive', new Date().toISOString());
-            localStorage.setItem('streakData', JSON.stringify({ current: stats.streak, lastDate: new Date().toISOString() }));
-
-            // Atualizar interface
-            const messageElement = document.getElementById('emotional-message');
-            if (messageElement) {
-                messageElement.textContent = message;
-                messageElement.className = `emotional-message emotional-${state}`;
-            }
-        }
-
-        // Inicializar sistema emocional somente se houver usuário logado
-        const currentUser = getCurrentUser();
-        if (currentUser) {
-            updateUserStats(currentUser.name);
-        }
-
-        // Sistema de Modo Foco com Pomodoro
-        let pomodoroInterval = null;
-        let pomodoroTime = 25 * 60; // 25 minutos em segundos
-        let isPaused = false;
-
-        // Função para iniciar o modo foco
         function startFocusMode(goalTitle, nivelFoco = 2) {
             const overlay = document.getElementById('focusModeOverlay');
-            const titleElement = document.getElementById('focusGoalTitle');
-            
-            titleElement.textContent = goalTitle;
+            document.getElementById('focusGoalTitle').textContent = goalTitle;
             overlay.style.display = 'flex';
-            
-            // Adicionar classe para transição
-            setTimeout(() => {
-                overlay.classList.add('show');
-            }, 10);
-            
-            // Ajustar tempo baseado no nível de foco
-            switch (nivelFoco) {
-                case 1:
-                    pomodoroTime = 15 * 60; // 15 minutos
-                    break;
-                case 2:
-                    pomodoroTime = 25 * 60; // 25 minutos
-                    break;
-                case 3:
-                    pomodoroTime = 45 * 60; // 45 minutos
-                    break;
-                default:
-                    pomodoroTime = 25 * 60;
-            }
-            
-            // Iniciar Pomodoro
+            setTimeout(() => overlay.classList.add('show'), 10);
+            pomodoroTime = nivelFoco === 1 ? 15*60 : nivelFoco === 3 ? 45*60 : 25*60;
             startPomodoro();
-            
-            // Event listeners para os botões
-            document.getElementById('exitFocusBtn').onclick = exitFocusMode;
+            document.getElementById('exitFocusBtn').onclick   = exitFocusMode;
             document.getElementById('pauseResumeBtn').onclick = togglePauseResume;
         }
 
-        // Função para sair do modo foco
         function exitFocusMode() {
             const overlay = document.getElementById('focusModeOverlay');
-            
             overlay.classList.remove('show');
-            setTimeout(() => {
-                overlay.style.display = 'none';
-            }, 300);
-            
-            // Parar o timer
-            if (pomodoroInterval) {
-                clearInterval(pomodoroInterval);
-                pomodoroInterval = null;
-            }
-            
-            // Resetar estado
-            pomodoroTime = 25 * 60;
-            isPaused = false;
-            updateTimerDisplay();
+            setTimeout(() => { overlay.style.display = 'none'; }, 300);
+            if (pomodoroInterval) { clearInterval(pomodoroInterval); pomodoroInterval = null; }
+            pomodoroTime = 25 * 60; isPaused = false; updateTimerDisplay();
         }
 
-        // Função para iniciar o timer Pomodoro
         function startPomodoro() {
-            if (pomodoroInterval) {
-                clearInterval(pomodoroInterval);
-            }
-            
+            if (pomodoroInterval) clearInterval(pomodoroInterval);
             pomodoroInterval = setInterval(() => {
                 if (!isPaused) {
-                    pomodoroTime--;
-                    updateTimerDisplay();
-                    
-                    if (pomodoroTime <= 0) {
-                        // Tempo acabou
-                        clearInterval(pomodoroInterval);
-                        pomodoroInterval = null;
-                        showToast('🎉 Tempo de foco concluído! Parabéns!');
-                        // Opcional: tocar som
-                        // playCompletionSound();
-                    }
+                    pomodoroTime--; updateTimerDisplay();
+                    if (pomodoroTime <= 0) { clearInterval(pomodoroInterval); pomodoroInterval = null; showToast('🎯 Tempo de foco concluído! Parabéns!', 'success'); }
                 }
             }, 1000);
         }
 
-        // Função para atualizar o display do timer
         function updateTimerDisplay() {
-            const minutes = Math.floor(pomodoroTime / 60);
-            const seconds = pomodoroTime % 60;
-            const timerElement = document.getElementById('pomodoroTimer');
-            
-            timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            const minutes = Math.floor(pomodoroTime / 60), seconds = pomodoroTime % 60;
+            document.getElementById('pomodoroTimer').textContent = `${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
         }
 
-        // Função para pausar/retomar
         function togglePauseResume() {
             isPaused = !isPaused;
-            const btn = document.getElementById('pauseResumeBtn');
-            btn.textContent = isPaused ? 'Retomar' : 'Pausar';
+            document.getElementById('pauseResumeBtn').textContent = isPaused ? 'Retomar' : 'Pausar';
         }
 
-        // Função opcional para tocar som (não implementada pois requer arquivo de áudio)
-        // function playCompletionSound() {
-        //     // Implementar se houver arquivo de som
-        // }
-
-        // Funções de autenticação
-        function initAuth() {
-            checkLoggedInUser();
+        // ── Sistema emocional ───────────────────────────────────────────────
+        function getEmotionalState(stats) {
+            const { completedToday, missedToday, streak } = stats;
+            if (streak >= 7 || (completedToday > missedToday && streak >= 3)) return 'motivado';
+            if (missedToday > completedToday * 2 || streak === 0) return 'dificuldade';
+            return 'neutro';
         }
+
+        function getEmotionalMessage(stats, userName = 'Você') {
+            const state = getEmotionalState(stats);
+            const { completedToday, missedToday, streak } = stats;
+            switch (state) {
+                case 'motivado':
+                    return streak >= 10 ? `🎉 ${userName}, você está arrasando! Sequência de ${streak} dias. ✨` : `🔥 ${userName}, você está no fogo! Sequência de ${streak} dias. 💪`;
+                case 'dificuldade':
+                    return missedToday > 0 ? `💙 ${userName}, está tudo bem errar às vezes. Amanhã é um novo dia. 🌟` : `💙 ${userName}, respire fundo. Pequenos progressos levam a grandes conquistas. ✨`;
+                default:
+                    return `💙 ${userName}, você está indo bem. Cada passo conta. 🌱`;
+            }
+        }
+
+        function calculateUserStats() {
+            const goals = JSON.parse(localStorage.getItem('goals')) || [];
+            const today = new Date(); today.setHours(0,0,0,0);
+            let completedToday = 0, missedToday = 0, streak = 0;
+            const lastActive = new Date(localStorage.getItem('lastActive') || today.toISOString());
+            goals.forEach(goal => {
+                if (goal.completed && goal.completedAt) {
+                    const d = new Date(goal.completedAt); d.setHours(0,0,0,0);
+                    if (d.getTime() === today.getTime()) completedToday++;
+                }
+                if (!goal.completed && goal.date) {
+                    const d = new Date(goal.date); d.setHours(0,0,0,0);
+                    if (d.getTime() < today.getTime()) missedToday++;
+                }
+            });
+            const streakData = JSON.parse(localStorage.getItem('streakData')) || { current: 0, lastDate: null };
+            const lastStreakDate = streakData.lastDate ? new Date(streakData.lastDate) : null;
+            lastStreakDate?.setHours(0,0,0,0);
+            if (completedToday > 0) {
+                if (lastStreakDate && (today.getTime() - lastStreakDate.getTime()) === 86400000) streak = streakData.current + 1;
+                else if (!lastStreakDate || (today.getTime() - lastStreakDate.getTime()) > 86400000) streak = 1;
+                else streak = streakData.current;
+            } else { streak = 0; }
+            return { completedToday, missedToday, streak, lastActive };
+        }
+
+        function updateUserStats(userName = 'Você') {
+            const stats = calculateUserStats();
+            const state = getEmotionalState(stats);
+            const message = getEmotionalMessage(stats, userName);
+            localStorage.setItem('userStats', JSON.stringify(stats));
+            localStorage.setItem('lastActive', new Date().toISOString());
+            localStorage.setItem('streakData', JSON.stringify({ current: stats.streak, lastDate: new Date().toISOString() }));
+            const el = document.getElementById('emotional-message');
+            if (el) { el.textContent = message; el.className = `emotional-message emotional-${state}`; }
+        }
+
+        // ── Autenticação ────────────────────────────────────────────────────
+        function initAuth() { checkLoggedInUser(); }
 
         function logoutUser() {
             localStorage.removeItem('currentUser');
@@ -1435,24 +1129,51 @@
 
         function checkLoggedInUser() {
             const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-            const authLinks = document.getElementById('auth-links');
-            const userInfo = document.getElementById('user-info');
-            const userName = document.getElementById('user-name');
-
+            const authLinks   = document.getElementById('auth-links');
+            const userInfo    = document.getElementById('user-info');
+            const userName    = document.getElementById('user-name');
             if (currentUser) {
                 authLinks.style.display = 'none';
-                userInfo.style.display = 'flex';
-                userName.textContent = `Olá, ${currentUser.name}`;
+                userInfo.style.display  = 'flex';
+                userName.textContent    = `Olá, ${currentUser.name}`;
                 showLoggedInState();
             } else {
                 authLinks.style.display = 'flex';
-                userInfo.style.display = 'none';
+                userInfo.style.display  = 'none';
                 showNotLoggedInState();
             }
         }
 
-        // Inicializar autenticação quando a página carrega
-        document.addEventListener('DOMContentLoaded', initAuth);
+        // ── Inicialização ───────────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            initAuth();
+            setupCalendarControls();
+            renderCalendar();
+            renderGoals();
+            checkDeadlines();
+
+            const currentUser = getCurrentUser();
+            if (currentUser) updateUserStats(currentUser.name);
+
+            document.getElementById('list-view').addEventListener('click', () => {
+                document.getElementById('goals-list-container').style.display = 'block';
+                document.getElementById('goals-cards-container').style.display = 'none';
+                document.getElementById('list-view').classList.add('active');
+                document.getElementById('cards-view').classList.remove('active');
+            });
+            document.getElementById('cards-view').addEventListener('click', () => {
+                document.getElementById('goals-list-container').style.display = 'none';
+                document.getElementById('goals-cards-container').style.display = 'block';
+                document.getElementById('cards-view').classList.add('active');
+                document.getElementById('list-view').classList.remove('active');
+            });
+
+            // Filtros automáticos
+            document.getElementById('filter-status').addEventListener('change', renderGoals);
+            document.getElementById('filter-prioridade').addEventListener('change', renderGoals);
+            document.getElementById('filter-categoria').addEventListener('input', renderGoals);
+            document.getElementById('sort-date').addEventListener('change', renderGoals);
+        });
     </script>
 </body>
 </html>
