@@ -4,6 +4,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meta Track</title>
     <link rel="stylesheet" href="Inicial.css">
+   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script>
+    const firebaseConfig = {
+        apiKey:            "AIzaSyDNtC59j5VIY-mmznyjDUvZ1FkjQKgmf3o",
+        authDomain:        "ethania.firebaseapp.com",
+        projectId:         "ethania",
+        storageBucket:     "ethania.firebasestorage.app",
+        messagingSenderId: "290971711529",
+        appId:             "1:290971711529:web:655a835e54baeef36d4438"
+    };
+    firebase.initializeApp(firebaseConfig);
+    window._auth    = firebase.auth();
+    window._signOut = () => firebase.auth().signOut();
+</script>
+
     <style>
         /* Notificação de prazo */
         #deadline-banner {
@@ -673,8 +689,14 @@
             const title      = document.getElementById('titulo-meta').value;
             const description = document.getElementById('descricao-meta').value;
             const date       = document.getElementById('data-limite').value;
-            const prioridade = document.getElementById('prioridade-meta').value;
-            const categoria  = document.getElementById('categoria-meta').value;
+           function showNotLoggedInState() {
+                document.getElementById('adicionar-meta').style.opacity = '0.5';
+                document.getElementById('adicionar-meta').style.pointerEvents = 'none';
+}
+            function showLoggedInState() {
+                document.getElementById('adicionar-meta').style.opacity = '1';
+                document.getElementById('adicionar-meta').style.pointerEvents = 'auto';
+}
             const nivelFoco  = parseInt(document.getElementById('nivel-foco').value);
             const goals      = JSON.parse(localStorage.getItem('goals')) || [];
             goals.push({ title, description, date, prioridade, categoria, nivelFoco, completed: false, started: false, startedAt: null, completedAt: null, subtasks: [] });
@@ -917,31 +939,34 @@
             localStorage.setItem('achievements', JSON.stringify(achievements));
             renderAchievements(achievements);
         }
-
-        function showAchievement(achievementId) {
+        function renderAchievements(achievements) {
+            const grid = document.getElementById('achievementsGrid');
+            if (!grid) return;
             const achievementData = {
-                'weekly-25':  { title: '🏅 Mestre Semanal',   description: '25 metas concluídas nesta semana!' },
-                'weekly-50':  { title: '🥇 Campeão Semanal',  description: '50 metas concluídas nesta semana!' },
-                'weekly-75':  { title: '👑 Rei Semanal',       description: '75 metas concluídas nesta semana!' },
-                'monthly-25': { title: '🏅 Mestre Mensal',    description: '25 metas concluídas neste mês!' },
-                'monthly-50': { title: '🥇 Campeão Mensal',   description: '50 metas concluídas neste mês!' },
-                'monthly-75': { title: '👑 Rei Mensal',        description: '75 metas concluídas neste mês!' },
-                'created-100':{ title: '🎯 Criador Prolífico', description: '100 metas criadas!' },
-                'first-goal': { title: '🎉 Primeira Meta',    description: 'Sua primeira meta foi criada!' }
+                'weekly-25':  { icon: '🏅', title: 'Mestre Semanal',   desc: '25 metas/semana',   color: '#FFD700', hint: 'Conclua 25 metas em uma semana' },
+                'weekly-50':  { icon: '🥇', title: 'Campeão Semanal',  desc: '50 metas/semana',   color: '#C0C0C0', hint: 'Conclua 50 metas em uma semana' },
+                'weekly-75':  { icon: '👑', title: 'Rei Semanal',       desc: '75 metas/semana',   color: '#FFD700', hint: 'Conclua 75 metas em uma semana' },
+                'monthly-25': { icon: '🏅', title: 'Mestre Mensal',    desc: '25 metas/mês',      color: '#FFD700', hint: 'Conclua 25 metas em um mês' },
+                'monthly-50': { icon: '🥇', title: 'Campeão Mensal',   desc: '50 metas/mês',      color: '#C0C0C0', hint: 'Conclua 50 metas em um mês' },
+                'monthly-75': { icon: '👑', title: 'Rei Mensal',        desc: '75 metas/mês',      color: '#FFD700', hint: 'Conclua 75 metas em um mês' },
+                'created-100':{ icon: '🎯', title: 'Criador Prolífico', desc: '100 metas criadas', color: '#FF6B6B', hint: 'Crie 100 metas no total' },
+                'first-goal': { icon: '🎉', title: 'Primeira Meta',    desc: 'Sua primeira meta!', color: '#4ECDC4', hint: 'Crie sua primeira meta' }
             };
-            const data = achievementData[achievementId];
-            if (data) {
-                const notification = document.createElement('div');
-                notification.className = 'achievement-notification';
-                notification.innerHTML = `<div class="achievement-icon">${data.title.split(' ')[0]}</div><div class="achievement-text"><h4>${data.title}</h4><p>${data.description}</p></div>`;
-                document.body.appendChild(notification);
-                setTimeout(() => {
-                    notification.classList.add('show');
-                    setTimeout(() => { notification.classList.remove('show'); setTimeout(() => notification.remove(), 500); }, 3000);
-                }, 100);
-            }
+            grid.innerHTML = '';
+            Object.entries(achievementData).forEach(([id, data]) => {
+                const unlocked = achievements.includes(id);
+                const medal = document.createElement('div');
+                medal.className = `achievement-medal ${unlocked ? 'unlocked' : 'locked'}`;
+                medal.title = unlocked ? data.desc : `🔒 ${data.hint}`;
+                medal.innerHTML = `
+                    <div class="medal-icon" style="color: ${unlocked ? data.color : '#555'}">${unlocked ? data.icon : '🔒'}</div>
+                    <h4>${data.title}</h4>
+                    <p>${unlocked ? data.desc : data.hint}</p>
+                    ${unlocked ? '<span class="medal-status">Desbloqueada ✓</span>' : '<span class="medal-status locked-label">Bloqueada</span>'}
+                `;
+                grid.appendChild(medal);
+            });
         }
-
         function renderAchievements(achievements) {
             const grid = document.getElementById('achievementsGrid');
             if (!grid) return;
@@ -998,10 +1023,15 @@
         function drawCharts(goals) {
             const now = new Date();
             const weekLabels = [], weekCount = [0,0,0,0];
-            const dateStart  = new Date(getWeekStart(now));
-            dateStart.setDate(dateStart.getDate() - 21);
-            for (let i = 0; i < 4; i++) {
-                const start = new Date(dateStart); start.setDate(start.getDate() + i * 7);
+            async function logoutUser() {
+                try {
+                    if (window._auth && window._signOut) {
+                        await window._signOut(window._auth);
+        }
+                } catch (e) { console.warn('Firebase signOut:', e); }
+        localStorage.removeItem('currentUser');
+         window.location.href = 'login.html';
+}
                 const end   = new Date(start);     end.setDate(start.getDate() + 7);
                 weekLabels.push(`${formatDate(start)} - ${formatDate(new Date(end.setDate(end.getDate()-1)))}`);
                 weekCount[i] = goals.filter(g => g.completed && g.completedAt && new Date(g.completedAt) >= start && new Date(g.completedAt) < end).length;
@@ -1018,7 +1048,7 @@
             if (monthlyChart) monthlyChart.destroy();
             weeklyChart = new Chart(document.getElementById('weeklyChart'), { type: 'line', data: { labels: weekLabels, datasets: [{ label: 'Concluídas', data: weekCount, borderColor: '#ff00ff', backgroundColor: 'rgba(187,134,252,0.2)', tension: 0.3, fill: true }] }, options: { responsive: true, scales: { y: { beginAtZero: true } } } });
             monthlyChart = new Chart(document.getElementById('monthlyChart'), { type: 'bar', data: { labels: monthLabels, datasets: [{ label: 'Concluídas', data: monthCount, backgroundColor: '#03dac6' }] }, options: { responsive: true, scales: { y: { beginAtZero: true } } } });
-        }
+        
 
         // ── Pomodoro ────────────────────────────────────────────────────────
         let pomodoroInterval = null, pomodoroTime = 25 * 60, isPaused = false;

@@ -214,7 +214,6 @@ body {
     max-height: 280px;
     width: auto;
     height: auto;
-    transform: scale(1.0);
     transform-origin: center;
     border: none;
     box-shadow: none;
@@ -1049,7 +1048,6 @@ footer {
     background-color: #2a2a3e;
 }
 
-
 /* Power-up de criação */
 .power-up-create {
     color: #ff00ff;
@@ -1378,4 +1376,52 @@ footer {
     color: #ff6b6b;
     border-color: #ff5252;
     box-shadow: 0 0 12px rgba(255, 82, 82, 0.3);
+}
+/* Scroll suave */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Barra de progresso estilizada */
+progress {
+    width: 100%;
+    height: 16px;
+    border-radius: 8px;
+    border: none;
+    overflow: hidden;
+    background-color: #1a1a2e;
+}
+progress::-webkit-progress-bar {
+    background-color: #1a1a2e;
+    border-radius: 8px;
+}
+progress::-webkit-progress-value {
+    background: linear-gradient(90deg, #ff00ff, #4ecdc4);
+    border-radius: 8px;
+    transition: width 0.4s ease;
+}
+progress::-moz-progress-bar {
+    background: linear-gradient(90deg, #ff00ff, #4ecdc4);
+    border-radius: 8px;
+}
+/* Conquistas bloqueadas */
+.achievement-medal.locked {
+    opacity: 0.4;
+    filter: grayscale(100%);
+    border-color: #444;
+    cursor: default;
+}
+.achievement-medal.locked:hover {
+    transform: none;
+    box-shadow: none;
+}
+.medal-status {
+    display: inline-block;
+    font-size: 0.75rem;
+    margin-top: 0.4rem;
+    color: #4ecdc4;
+    font-weight: bold;
+}
+.medal-status.locked-label {
+    color: #666;
 }
