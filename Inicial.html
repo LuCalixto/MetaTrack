@@ -837,10 +837,11 @@
                     showPowerUp('start'); renderGoals(); updateUserStats();
                 });
             });
-            // Delete buttons
+           // Delete buttons
             document.querySelectorAll('#goals-list-container .delete-btn, #goals-cards-container .delete-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const index = parseInt(this.dataset.index);
+                    if (!confirm('Tem certeza que deseja excluir esta meta? Esta ação não pode ser desfeita.')) return;
                     const goals = JSON.parse(localStorage.getItem('goals')) || [];
                     goals.splice(index, 1);
                     localStorage.setItem('goals', JSON.stringify(goals));

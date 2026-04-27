@@ -1049,32 +1049,6 @@ footer {
     background-color: #2a2a3e;
 }
 
-#user-info {
-    background-color: #232323;
-    border: 1px solid #3a3a3a;
-    border-radius: 12px;
-    padding: 1rem;
-    text-align: center;
-}
-
-#user-info p {
-    margin: 0 0 1rem 0;
-    color: #e0e0e0;
-}
-
-#user-info button {
-    background-color: #ff6b6b;
-    color: #e0e0e0;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-#user-info button:hover {
-    background-color: #ff5252;
-}
 
 /* Power-up de criação */
 .power-up-create {
