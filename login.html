@@ -3,21 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MetaTrack — Faça login e acompanhe suas metas e conquistas.">
     <title>Login - Meta Track</title>
     <link rel="stylesheet" href="Inicial.css">
     <script src="config.js"></script>
     <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    const app  = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-   window._auth                       = auth;
-window._signInWithEmailAndPassword = signInWithEmailAndPassword;
-window._sendPasswordResetEmail = sendPasswordResetEmail;
-
-
-</script>
+        const app  = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        window._auth                       = auth;
+        window._signInWithEmailAndPassword = signInWithEmailAndPassword;
+        window._sendPasswordResetEmail     = sendPasswordResetEmail;
+    </script>
 </head>
 <body>
     <div class="auth-page">
@@ -41,64 +40,63 @@ window._sendPasswordResetEmail = sendPasswordResetEmail;
         </div>
     </div>
 
-    <!-- Toast notification -->
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <script>
-    function showToast(message, type = 'default') {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.className = 'toast'; // reseta classes anteriores
-    if (type === 'success') toast.classList.add('toast-success');
-    if (type === 'error')   toast.classList.add('toast-error');
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 2300);
-}
-
-    async function loginUser(event) {
-        event.preventDefault();
-        const email    = document.getElementById('login-email').value.trim();
-        const password = document.getElementById('login-password').value;
-        const btn      = document.querySelector('button[type="submit"]');
-
-        btn.disabled = true; btn.textContent = 'Entrando...';
-
-        try {
-            const userCredential = await window._signInWithEmailAndPassword(window._auth, email, password);
-            const user = userCredential.user;
-            localStorage.setItem('currentUser', JSON.stringify({ name: user.displayName || email.split('@')[0], email: user.email }));
-            showToast('Login realizado com sucesso!', 'success');
-            setTimeout(() => { window.location.href = 'Inicial.html'; }, 1000);
-        } catch (error) {
-            const msgs = {
-                'auth/invalid-credential':     'As informações de login estão incorretas. Verifique seu email e senha.',
-                'auth/too-many-requests':      'Muitas tentativas. Aguarde alguns minutos.',
-                'auth/network-request-failed': 'Sem conexão. Verifique sua internet.',
-                'auth/user-disabled':          'Esta conta foi desativada.',
-            };
-            showToast(msgs[error.code] || 'Erro ao fazer login. Tente novamente.', 'error');
-            btn.disabled = false; btn.textContent = 'Entrar';
+        function showToast(message, type = 'default') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast';
+            if (type === 'success') toast.classList.add('toast-success');
+            if (type === 'error')   toast.classList.add('toast-error');
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2300);
         }
-    }
 
-    async function resetPassword() {
-    const email = document.getElementById('login-email').value.trim();
-    if (!email) {
-        showToast('Digite seu email acima para recuperar a senha.', 'error');
-        return;
-    }
-    try {
-        await window._sendPasswordResetEmail(window._auth, email);
-        showToast('Email de recuperação enviado! Verifique sua caixa de entrada.', 'success');
-    } catch (error) {
-        const msgs = {
-            'auth/user-not-found':         'Nenhuma conta encontrada com este email.',
-            'auth/invalid-email':           'Email inválido.',
-            'auth/network-request-failed':  'Sem conexão. Verifique sua internet.',
-        };
-        showToast(msgs[error.code] || 'Erro ao enviar email. Tente novamente.', 'error');
-    }
-}
-</script>
+        async function loginUser(event) {
+            event.preventDefault();
+            const email    = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const btn      = document.querySelector('button[type="submit"]');
+
+            btn.disabled = true; btn.textContent = 'Entrando...';
+
+            try {
+                const userCredential = await window._signInWithEmailAndPassword(window._auth, email, password);
+                const user = userCredential.user;
+                localStorage.setItem('currentUser', JSON.stringify({ name: user.displayName || email.split('@')[0], email: user.email }));
+                showToast('Login realizado com sucesso!', 'success');
+                setTimeout(() => { window.location.href = 'Inicial.html'; }, 1000);
+            } catch (error) {
+                const msgs = {
+                    'auth/invalid-credential':     'As informações de login estão incorretas. Verifique seu email e senha.',
+                    'auth/too-many-requests':      'Muitas tentativas. Aguarde alguns minutos.',
+                    'auth/network-request-failed': 'Sem conexão. Verifique sua internet.',
+                    'auth/user-disabled':          'Esta conta foi desativada.',
+                };
+                showToast(msgs[error.code] || 'Erro ao fazer login. Tente novamente.', 'error');
+                btn.disabled = false; btn.textContent = 'Entrar';
+            }
+        }
+
+        async function resetPassword() {
+            const email = document.getElementById('login-email').value.trim();
+            if (!email) {
+                showToast('Digite seu email acima para recuperar a senha.', 'error');
+                return;
+            }
+            try {
+                await window._sendPasswordResetEmail(window._auth, email);
+                showToast('Email de recuperação enviado! Verifique sua caixa de entrada.', 'success');
+            } catch (error) {
+                const msgs = {
+                    'auth/user-not-found':        'Nenhuma conta encontrada com este email.',
+                    'auth/invalid-email':          'Email inválido.',
+                    'auth/network-request-failed': 'Sem conexão. Verifique sua internet.',
+                };
+                showToast(msgs[error.code] || 'Erro ao enviar email. Tente novamente.', 'error');
+            }
+        }
+    </script>
 </body>
 </html>

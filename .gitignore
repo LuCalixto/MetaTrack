@@ -1,1 +1,9 @@
-config.js
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# node_modules (caso use npm futuramente)
+node_modules/

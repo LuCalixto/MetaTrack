@@ -1490,13 +1490,12 @@ progress::-moz-progress-bar {
     }
 
     .main-nav a {
-        font-size: 0.8rem;
-        padding: 4px 6px;
-        background: rgba(255,255,255,0.07);
-        border-radius: 6px;
-        display: block;
-    }
-
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 6px;
+    display: block;
+}
     .auth-section {
         font-size: 0.82rem;
     }
