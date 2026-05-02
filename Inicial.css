@@ -1425,3 +1425,23 @@ progress::-moz-progress-bar {
 .medal-status.locked-label {
     color: #666;
 }
+/* Conquistas bloqueadas */
+.achievement-medal.locked {
+    opacity: 0.4;
+    filter: grayscale(100%);
+    cursor: default;
+}
+.achievement-medal.locked:hover {
+    transform: none;
+    box-shadow: none;
+}
+.medal-status {
+    display: inline-block;
+    font-size: 0.75rem;
+    margin-top: 0.4rem;
+    color: #4ecdc4;
+    font-weight: bold;
+}
+.medal-status.locked-label {
+    color: #666;
+}

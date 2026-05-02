@@ -6,25 +6,25 @@
     <title>Cadastro - Meta Track</title>
     <link rel="stylesheet" href="Inicial.css">
     <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    const firebaseConfig = {
-    apiKey:            "AIzaSyDNtC59j5VIY-mmznyjDUvZ1FkjQKgmf3o",
-    authDomain:        "ethania.firebaseapp.com",
-    projectId:         "ethania",
-    storageBucket:     "ethania.firebasestorage.app",
-    messagingSenderId: "290971711529",
-    appId:             "1:290971711529:web:655a835e54baeef36d4438",
-    measurementId:     "G-DZDTQ0B676"
-};
+        const firebaseConfig = {
+            apiKey:            "AIzaSyDNtC59j5VIY-mmznyjDUvZ1FkjQKgmf3o",
+            authDomain:        "ethania.firebaseapp.com",
+            projectId:         "ethania",
+            storageBucket:     "ethania.firebasestorage.app",
+            messagingSenderId: "290971711529",
+            appId:             "1:290971711529:web:655a835e54baeef36d4438",
+            measurementId:     "G-DZDTQ0B676"
+        };
 
-    const app  = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    window._auth                           = auth;
-    window._createUserWithEmailAndPassword = createUserWithEmailAndPassword;
-    window._updateProfile                  = updateProfile;
-</script>
+        const app  = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        window._auth                           = auth;
+        window._createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+        window._updateProfile                  = updateProfile;
+    </script>
 </head>
 <body>
     <div class="auth-page">
@@ -39,88 +39,89 @@
                     <label for="register-email">Email:</label>
                     <input type="email" id="register-email" name="email" required>
                 </div>
-                <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
-    <div class="form-group">
-
-    <label for="register-password">Senha:</label>
-    <input type="password" id="register-password" name="password" required>
-    <div id="password-strength" style="margin-top: 4px; font-size: 12px;"></div>
-</div>
-<div class="form-group">
-    <label for="register-confirm">Confirmar Senha:</label>
-    <input type="password" id="register-confirm" name="confirm" required>
-</div>
-                <button type="submit">Cadastrar</button>
+                <div class="form-group">
+                    <label for="register-password">Senha:</label>
+                    <input type="password" id="register-password" name="password" required>
+                    <div id="password-strength" style="margin-top: 4px; font-size: 12px;"></div>
+                </div>
+                <div class="form-group">
+                    <label for="register-confirm">Confirmar Senha:</label>
+                    <input type="password" id="register-confirm" name="confirm" required>
+                </div>
+                <button type="submit" id="register-btn">Cadastrar</button>
             </form>
             <p>Já tem conta? <a href="login.html">Faça login</a></p>
             <p><a href="Inicial.html">Voltar ao início</a></p>
         </div>
     </div>
 
-    <!-- Toast notification -->
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-<script>
-    document.getElementById('register-password').addEventListener('input', function () {
-        const val = this.value;
-        const el  = document.getElementById('password-strength');
-        if (!val) { el.textContent = ''; return; }
-        let score = 0;
-        if (val.length >= 8)          score++;
-        if (/[A-Z]/.test(val))        score++;
-        if (/[0-9]/.test(val))        score++;
-        if (/[^A-Za-z0-9]/.test(val)) score++;
-        const levels = [
-            { label: 'Muito fraca', color: '#ff5252' },
-            { label: 'Fraca',       color: '#ff5252' },
-            { label: 'Média',       color: '#ffb74d' },
-            { label: 'Forte',       color: '#81c784' },
-            { label: 'Muito forte', color: '#4ecdc4' },
-        ];
-        el.textContent = `Força: ${levels[score].label}`;
-        el.style.color = levels[score].color;
-    });
+    <script>
+        document.getElementById('register-password').addEventListener('input', function () {
+            const val = this.value;
+            const el  = document.getElementById('password-strength');
+            if (!val) { el.textContent = ''; return; }
+            let score = 0;
+            if (val.length >= 8)          score++;
+            if (/[A-Z]/.test(val))        score++;
+            if (/[0-9]/.test(val))        score++;
+            if (/[^A-Za-z0-9]/.test(val)) score++;
+            const levels = [
+                { label: 'Muito fraca', color: '#ff5252' },
+                { label: 'Fraca',       color: '#ff5252' },
+                { label: 'Média',       color: '#ffb74d' },
+                { label: 'Forte',       color: '#81c784' },
+                { label: 'Muito forte', color: '#4ecdc4' },
+            ];
+            el.textContent = `Força: ${levels[score].label}`;
+            el.style.color = levels[score].color;
+        });
 
-   function showToast(message, type = 'default') {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.className = 'toast'; // reseta classes anteriores
-    if (type === 'success') toast.classList.add('toast-success');
-    if (type === 'error')   toast.classList.add('toast-error');
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 2300);
-}
-
-    async function registerUser(event) {
-        event.preventDefault();
-        const name     = document.getElementById('register-name').value.trim();
-        const email    = document.getElementById('register-email').value.trim();
-        const password = document.getElementById('register-password').value;
-        const confirm  = document.getElementById('register-confirm').value;
-        const btn      = document.querySelector('button[type="submit"]');
-
-        showToast('A senha precisa ter ao menos 8 caracteres.', 'error'); return; 
-        showToast('As senhas não coincidem.', 'error'); return; 
-
-        btn.disabled = true; btn.textContent = 'Cadastrando...';
-
-        try {
-            const userCredential = await window._createUserWithEmailAndPassword(window._auth, email, password);
-            await window._updateProfile(userCredential.user, { displayName: name });
-            localStorage.setItem('currentUser', JSON.stringify({ name, email }));
-            showToast('Usuário cadastrado com sucesso!', 'success');
-            setTimeout(() => { window.location.href = 'Inicial.html'; }, 1000);
-        } catch (error) {
-            const msgs = {
-                'auth/email-already-in-use':  'Este email já está cadastrado.',
-                'auth/invalid-email':          'Email inválido.',
-                'auth/weak-password':          'Senha muito fraca.',
-                'auth/network-request-failed': 'Sem conexão. Verifique sua internet.',
-            };
-            showToast(msgs[error.code] || `Erro: ${error.message}`, 'error');
-            btn.disabled = false; btn.textContent = 'Cadastrar';
+        function showToast(message, type = 'default') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast';
+            if (type === 'success') toast.classList.add('toast-success');
+            if (type === 'error')   toast.classList.add('toast-error');
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2300);
         }
-    }
-</script>
+
+        async function registerUser(event) {
+            event.preventDefault();
+            const name     = document.getElementById('register-name').value.trim();
+            const email    = document.getElementById('register-email').value.trim();
+            const password = document.getElementById('register-password').value;
+            const confirm  = document.getElementById('register-confirm').value;
+            const btn      = document.getElementById('register-btn');
+
+            if (password.length < 8) {
+                showToast('A senha precisa ter ao menos 8 caracteres.', 'error'); return;
+            }
+            if (password !== confirm) {
+                showToast('As senhas não coincidem.', 'error'); return;
+            }
+
+            btn.disabled = true; btn.textContent = 'Cadastrando...';
+
+            try {
+                const userCredential = await window._createUserWithEmailAndPassword(window._auth, email, password);
+                await window._updateProfile(userCredential.user, { displayName: name });
+                localStorage.setItem('currentUser', JSON.stringify({ name, email }));
+                showToast('Usuário cadastrado com sucesso!', 'success');
+                setTimeout(() => { window.location.href = 'Inicial.html'; }, 1000);
+            } catch (error) {
+                const msgs = {
+                    'auth/email-already-in-use':  'Este email já está cadastrado.',
+                    'auth/invalid-email':          'Email inválido.',
+                    'auth/weak-password':          'Senha muito fraca.',
+                    'auth/network-request-failed': 'Sem conexão. Verifique sua internet.',
+                };
+                showToast(msgs[error.code] || `Erro: ${error.message}`, 'error');
+                btn.disabled = false; btn.textContent = 'Cadastrar';
+            }
+        }
+    </script>
 </body>
 </html>
