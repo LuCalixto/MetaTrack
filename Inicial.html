@@ -266,6 +266,8 @@
                 <select id="filter-prioridade"><option value="">Todas</option><option value="baixa">Baixa</option><option value="media">Média</option><option value="alta">Alta</option></select>
                 <label for="filter-categoria">Filtrar por Categoria:</label>
                 <input type="text" id="filter-categoria" placeholder="Digite a categoria">
+                <label for="search-titulo">Pesquisar por Título:</label>
+                <input type="text" id="search-titulo" placeholder="Digite o título da meta">
                 <label for="sort-date">Ordenar por Data:</label>
                 <select id="sort-date"><option value="">Sem ordenação</option><option value="asc">Crescente</option><option value="desc">Decrescente</option></select>
             </div>
@@ -732,11 +734,13 @@
             const prioridadeFilter = document.getElementById('filter-prioridade').value;
             const categoriaFilter = document.getElementById('filter-categoria').value.toLowerCase();
             const sortDate        = document.getElementById('sort-date').value;
+            const searchTitulo    = document.getElementById('search-titulo').value.toLowerCase();
 
             let goalsWithIndex = allGoals.map((goal, index) => ({ ...goal, originalIndex: index }));
             if (statusFilter)    goalsWithIndex = goalsWithIndex.filter(item => getStatus(item) === statusFilter);
             if (prioridadeFilter) goalsWithIndex = goalsWithIndex.filter(item => item.prioridade === prioridadeFilter);
             if (categoriaFilter) goalsWithIndex = goalsWithIndex.filter(item => item.categoria && item.categoria.toLowerCase().includes(categoriaFilter));
+            if (searchTitulo) goalsWithIndex = goalsWithIndex.filter(item => item.title && item.title.toLowerCase().includes(searchTitulo));
             if (sortDate === 'asc')  goalsWithIndex.sort((a, b) => new Date(a.date) - new Date(b.date));
             if (sortDate === 'desc') goalsWithIndex.sort((a, b) => new Date(b.date) - new Date(a.date));
 
@@ -964,6 +968,11 @@
         function renderAchievements(achievements) {
     const grid = document.getElementById('achievementsGrid');
     if (!grid) return;
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser) {
+        grid.innerHTML = '<p class="no-achievements">Faça login para ver suas conquistas! 🔒</p>';
+        return;
+    }
     const achievementData = {
         'weekly-25':  { icon: '🏅', title: 'Mestre Semanal',   desc: '25 metas/semana',   color: '#FFD700', hint: 'Conclua 25 metas em uma semana' },
         'weekly-50':  { icon: '🥇', title: 'Campeão Semanal',  desc: '50 metas/semana',   color: '#C0C0C0', hint: 'Conclua 50 metas em uma semana' },
@@ -1195,6 +1204,7 @@
             document.getElementById('filter-status').addEventListener('change', renderGoals);
             document.getElementById('filter-prioridade').addEventListener('change', renderGoals);
             document.getElementById('filter-categoria').addEventListener('input', renderGoals);
+            document.getElementById('search-titulo').addEventListener('input', renderGoals);
             document.getElementById('sort-date').addEventListener('change', renderGoals);
         });
     </script>

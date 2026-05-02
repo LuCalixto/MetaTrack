@@ -8,14 +8,13 @@
     <script src="config.js"></script>
     <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-    // configurações carregadas do config.js
+    import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     const app  = initializeApp(firebaseConfig);
     const auth = getAuth(app);
    window._auth                       = auth;
 window._signInWithEmailAndPassword = signInWithEmailAndPassword;
+window._sendPasswordResetEmail = sendPasswordResetEmail;
 
 
 </script>
@@ -37,6 +36,7 @@ window._signInWithEmailAndPassword = signInWithEmailAndPassword;
                 <button type="submit">Entrar</button>
             </form>
             <p>Não tem conta? <a href="cadastro.html">Cadastre-se</a></p>
+            <p><a href="#" onclick="resetPassword()">Esqueci minha senha</a></p>
             <p><a href="Inicial.html">Voltar ao início</a></p>
         </div>
     </div>
@@ -80,6 +80,25 @@ window._signInWithEmailAndPassword = signInWithEmailAndPassword;
             btn.disabled = false; btn.textContent = 'Entrar';
         }
     }
+
+    async function resetPassword() {
+    const email = document.getElementById('login-email').value.trim();
+    if (!email) {
+        showToast('Digite seu email acima para recuperar a senha.', 'error');
+        return;
+    }
+    try {
+        await window._sendPasswordResetEmail(window._auth, email);
+        showToast('Email de recuperação enviado! Verifique sua caixa de entrada.', 'success');
+    } catch (error) {
+        const msgs = {
+            'auth/user-not-found':         'Nenhuma conta encontrada com este email.',
+            'auth/invalid-email':           'Email inválido.',
+            'auth/network-request-failed':  'Sem conexão. Verifique sua internet.',
+        };
+        showToast(msgs[error.code] || 'Erro ao enviar email. Tente novamente.', 'error');
+    }
+}
 </script>
 </body>
 </html>
