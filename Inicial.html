@@ -108,6 +108,16 @@
     </style>
 </head>
 <body>
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="splash-screen">
+        <div class="splash-content">
+            <img src="main/2logo-removebg-preview.png" alt="MetaTrack" class="splash-logo">
+            <div class="splash-bar-wrapper">
+                <div class="splash-bar"></div>
+            </div>
+        </div>
+    </div>
+
     <header class="header">
         <div class="logo-container">
             <img src="main/2logo-removebg-preview.png" alt="Logo" class="logo">
@@ -187,6 +197,9 @@
     </div>
 
     <main>
+        <div id="pull-indicator" class="pull-indicator">
+            <span class="pull-arrow">↓</span> <span id="pull-text">Puxe para atualizar</span>
+        </div>
         <div class="main-top-row">
             <section id="adicionar-meta" class="animate-section">
                 <h2>Adicionar Nova Meta</h2>
@@ -346,6 +359,7 @@
     <div id="calendarTooltip" class="calendar-tooltip" aria-hidden="true"></div>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <div id="powerUpContainer"></div>
+    <canvas id="confetti-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:99998;display:none;"></canvas>
 
     <div id="focusModeOverlay" class="focus-mode-overlay" style="display: none;">
         <div class="focus-mode-content">
@@ -869,7 +883,7 @@
                     if (checkbox.checked && !goals[index].completedAt) goals[index].completedAt = new Date().toISOString();
                     if (!checkbox.checked) goals[index].completedAt = null;
                     localStorage.setItem('goals', JSON.stringify(goals));
-                    if (checkbox.checked) showPowerUp('complete');
+                    if (checkbox.checked) { showPowerUp('complete'); launchConfetti(); }
                     renderGoals(); updateUserStats();
                 });
             });
@@ -884,7 +898,7 @@
                     if (checkbox.checked && !goals[index].completedAt) goals[index].completedAt = new Date().toISOString();
                     if (!checkbox.checked) goals[index].completedAt = null;
                     localStorage.setItem('goals', JSON.stringify(goals));
-                    if (checkbox.checked) showPowerUp('complete');
+                    if (checkbox.checked) { showPowerUp('complete'); launchConfetti(); }
                     renderGoals(); updateUserStats();
                 });
             });
@@ -1330,7 +1344,98 @@
             if (el) el.style.display = show ? 'flex' : 'none';
         }
 
+        // ── Splash Screen ──────────────────────────────────────────────────
+        function initSplash() {
+            const splash = document.getElementById('splash-screen');
+            if (!splash) return;
+            setTimeout(() => {
+                splash.classList.add('splash-hide');
+                setTimeout(() => splash.style.display = 'none', 600);
+            }, 1400);
+        }
+
+        // ── Confete ────────────────────────────────────────────────────────
+        function launchConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            if (!canvas) return;
+            canvas.style.display = 'block';
+            const ctx = canvas.getContext('2d');
+            canvas.width  = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const colors  = ['#ff00ff','#4ecdc4','#ffb74d','#81c784','#64b5f6','#ff6b6b','#fff'];
+            const pieces  = Array.from({ length: 120 }, () => ({
+                x: Math.random() * canvas.width,
+                y: Math.random() * -canvas.height * 0.5,
+                r: Math.random() * 7 + 3,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                vx: (Math.random() - 0.5) * 4,
+                vy: Math.random() * 4 + 2,
+                rot: Math.random() * 360,
+                rotV: (Math.random() - 0.5) * 6,
+                shape: Math.random() > 0.5 ? 'rect' : 'circle',
+            }));
+            let frame = 0;
+            function drawConfetti() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                pieces.forEach(p => {
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rot * Math.PI / 180);
+                    ctx.fillStyle = p.color;
+                    if (p.shape === 'rect') ctx.fillRect(-p.r, -p.r / 2, p.r * 2, p.r);
+                    else { ctx.beginPath(); ctx.arc(0, 0, p.r / 2, 0, Math.PI * 2); ctx.fill(); }
+                    ctx.restore();
+                    p.x += p.vx; p.y += p.vy; p.rot += p.rotV;
+                    p.vy += 0.08; // gravidade
+                });
+                frame++;
+                if (frame < 160) requestAnimationFrame(drawConfetti);
+                else { ctx.clearRect(0, 0, canvas.width, canvas.height); canvas.style.display = 'none'; }
+            }
+            drawConfetti();
+            if (navigator.vibrate) navigator.vibrate([50, 30, 80, 30, 50]);
+        }
+
+        // ── Pull to Refresh ────────────────────────────────────────────────
+        function initPullToRefresh() {
+            let startY = 0, pulling = false;
+            const indicator = document.getElementById('pull-indicator');
+            const pullText  = document.getElementById('pull-text');
+            const threshold = 80;
+
+            document.addEventListener('touchstart', e => {
+                if (window.scrollY === 0) { startY = e.touches[0].clientY; pulling = true; }
+            }, { passive: true });
+
+            document.addEventListener('touchmove', e => {
+                if (!pulling) return;
+                const dist = e.touches[0].clientY - startY;
+                if (dist > 10 && window.scrollY === 0) {
+                    const pct = Math.min(dist / threshold, 1);
+                    indicator.style.height  = `${Math.min(dist * 0.4, 48)}px`;
+                    indicator.style.opacity = pct;
+                    indicator.querySelector('.pull-arrow').style.transform = `rotate(${pct * 180}deg)`;
+                    pullText.textContent = dist >= threshold ? 'Solte para atualizar' : 'Puxe para atualizar';
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchend', e => {
+                if (!pulling) return;
+                pulling = false;
+                const dist = e.changedTouches[0].clientY - startY;
+                indicator.style.height  = '0';
+                indicator.style.opacity = '0';
+                if (dist >= threshold && window.scrollY === 0) {
+                    pullText.textContent = 'Atualizando...';
+                    if (navigator.vibrate) navigator.vibrate(40);
+                    setTimeout(() => { renderGoals(); checkDeadlines(); }, 300);
+                }
+            }, { passive: true });
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            initSplash();
+            initPullToRefresh();
             initAuth();
             initColapsaveis();
             setupCalendarControls();
