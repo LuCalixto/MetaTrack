@@ -2274,3 +2274,51 @@ form input {
     display: inline-block;
     transition: transform 0.2s;
 }
+
+/* ── Splash Screen ──────────────────────────────────────────────────────── */
+.splash-screen {
+    position: fixed;
+    inset: 0;
+    background: #0a0a0a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999;
+    transition: opacity 0.6s ease;
+}
+.splash-screen.splash-hide {
+    opacity: 0;
+    pointer-events: none;
+}
+.splash-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+.splash-logo {
+    width: 200px;
+    animation: splashPulse 1s ease-in-out infinite alternate;
+}
+@keyframes splashPulse {
+    from { transform: scale(1);    opacity: 0.85; }
+    to   { transform: scale(1.05); opacity: 1; }
+}
+.splash-bar-wrapper {
+    width: 180px;
+    height: 3px;
+    background: #1a1a2e;
+    border-radius: 3px;
+    overflow: hidden;
+}
+.splash-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #8a2be2, #ff00ff, #4ecdc4);
+    border-radius: 3px;
+    animation: splashLoad 1.2s ease forwards;
+}
+@keyframes splashLoad {
+    0%   { width: 0%; }
+    100% { width: 100%; }
+}
