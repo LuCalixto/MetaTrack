@@ -126,16 +126,21 @@
                 <a href="cadastro.html" class="auth-link">Cadastro</a>
             </div>
             <div id="user-info" style="display: none;">
+                <span id="streak-badge" class="streak-badge" style="display:none;"></span>
                 <span id="user-name"></span>
                 <button onclick="logoutUser()" class="logout-btn">Sair</button>
             </div>
         </div>
     </header>
 
-    <!-- Banner de prazo próximo -->
-    <div id="deadline-banner">
-        <strong>⚠️ Metas com prazo próximo (3 dias ou menos):</strong>
-        <ul id="deadline-list"></ul>
+    <!-- Banner de prazo próximo (só logado) -->
+    <div id="deadline-banner" class="deadline-banner-new">
+        <div class="deadline-banner-icon">⚠️</div>
+        <div class="deadline-banner-content">
+            <strong>Prazos chegando!</strong>
+            <ul id="deadline-list"></ul>
+        </div>
+        <button class="deadline-close-btn" onclick="document.getElementById('deadline-banner').style.display='none'">✕</button>
     </div>
 
     <!-- Modal de edição -->
@@ -183,7 +188,7 @@
 
     <main>
         <div class="main-top-row">
-            <section id="adicionar-meta">
+            <section id="adicionar-meta" class="animate-section">
                 <h2>Adicionar Nova Meta</h2>
                 <form onsubmit="addGoal(event)">
                     <div class="form-row">
@@ -236,7 +241,9 @@
                     <button id="prevMonthBtn" aria-label="Mês anterior">◀</button>
                     <span id="calendarMonthLabel"></span>
                     <button id="nextMonthBtn" aria-label="Próximo mês">▶</button>
+                    <button id="toggleCalendarBtn" class="calendar-toggle-btn" aria-label="Recolher calendário">▲</button>
                 </div>
+                <div id="calendarBody-wrapper">
                 <table class="calendar-table">
                     <thead>
                         <tr>
@@ -255,12 +262,17 @@
                     </div>
                 </div>
                 <div id="emotional-message" class="emotional-message"></div>
+                </div><!-- end calendarBody-wrapper -->
             </aside>
         </div>
 
-        <section id="minhas-metas">
-            <h2>Minhas Metas</h2>
-            <button class="export-btn" onclick="exportCSV()">📥 Exportar Metas (CSV)</button>
+        <section id="minhas-metas" class="animate-section">
+            <div class="metas-header-row">
+                <h2>Minhas Metas</h2>
+                <button class="export-btn" onclick="exportCSV()">📥 CSV</button>
+            </div>
+            <button id="toggleFiltrosBtn" class="filtros-toggle-btn">🔍 Filtros <span id="filtrosArrow">▼</span></button>
+            <div id="filtros-wrapper" class="filters-collapsible">
             <div class="filters">
                 <label for="filter-status">Filtrar por Status:</label>
                 <select id="filter-status"><option value="">Todos</option><option value="Não iniciado">Não iniciado</option><option value="Em Andamento">Em Andamento</option><option value="Atrasada">Atrasada</option><option value="Concluída">Concluída</option></select>
@@ -273,41 +285,51 @@
                 <label for="sort-date">Ordenar por Data:</label>
                 <select id="sort-date"><option value="">Sem ordenação</option><option value="asc">Crescente</option><option value="desc">Decrescente</option></select>
             </div>
+            </div><!-- end filtros-wrapper -->
             <div class="view-toggle">
                 <button id="list-view">📋 Lista</button>
                 <button id="cards-view" class="active">📇 Cards</button>
             </div>
+            <div id="goals-loading" class="goals-loading" style="display:none;">
+                <div class="loading-spinner"></div>
+                <p>Carregando metas...</p>
+            </div>
             <div id="goals-list-container" style="display: none;"><ul></ul></div>
             <div id="goals-cards-container">
                 <div class="goals-cards" id="goalsCards"></div>
+                <div id="goals-empty" class="goals-empty" style="display:none;">
+                    <div class="empty-icon">🎯</div>
+                    <p class="empty-title">Nenhuma meta ainda!</p>
+                    <p class="empty-sub">Adicione sua primeira meta lá em cima e comece a conquistar seus objetivos.</p>
+                </div>
             </div>
         </section>
 
-        <section id="progresso">
+        <section id="progresso" class="animate-section">
             <h2>Progresso Geral</h2>
             <p id="progress-text">Metas concluídas: 0 de 0</p>
             <progress id="progress-bar" value="0" max="100"></progress>
             <p id="progress-historic" style="margin-top:0.5rem; font-size:0.85rem; color:#4ecdc4;"></p>
         </section>
 
-        <section id="dashboard">
+        <section id="dashboard" class="animate-section">
             <h2>Dashboard de Performance</h2>
             <div class="dashboard-grid">
                 <article class="card">
-                    <h3>Concluídas (semana)</h3>
-                    <p id="concluidas-semana"></p>
-                    <p id="comparativo-semana"></p>
+                    <h3>📅 Semana</h3>
+                    <p id="concluidas-semana" class="card-stat">—</p>
+                    <p id="comparativo-semana" class="card-compare"></p>
                 </article>
                 <article class="card">
-                    <h3>Concluídas (mês)</h3>
-                    <p id="concluidas-mes"></p>
-                    <p id="comparativo-mes"></p>
+                    <h3>🗓️ Mês</h3>
+                    <p id="concluidas-mes" class="card-stat">—</p>
+                    <p id="comparativo-mes" class="card-compare"></p>
                 </article>
             </div>
-            <div class="achievements-section">
-                <h3>🏆 Conquistas Desbloqueadas</h3>
+            <details class="achievements-section" open>
+                <summary class="achievements-summary">🏆 Conquistas Desbloqueadas</summary>
                 <div class="achievements-grid" id="achievementsGrid"></div>
-            </div>
+            </details>
             <div class="charts-wrapper">
                 <div class="chart-card">
                     <h3>Metas Concluídas (últimas 4 semanas)</h3>
@@ -366,6 +388,11 @@
 
         // ── Notificações de prazo ───────────────────────────────────────────
         function checkDeadlines() {
+            // Só mostra para usuários logados
+            const currentUser = getCurrentUser();
+            const banner = document.getElementById('deadline-banner');
+            if (!currentUser) { banner.style.display = 'none'; return; }
+
             const goals = JSON.parse(localStorage.getItem('goals')) || [];
             const today = new Date(); today.setHours(0,0,0,0);
             const in3days = new Date(today); in3days.setDate(today.getDate() + 3);
@@ -376,20 +403,29 @@
                 return due >= today && due <= in3days;
             });
 
-            const banner = document.getElementById('deadline-banner');
-            const list   = document.getElementById('deadline-list');
+            const list = document.getElementById('deadline-list');
             if (urgent.length === 0) { banner.style.display = 'none'; return; }
 
             list.innerHTML = '';
             urgent.forEach(g => {
                 const due = new Date(g.date); due.setHours(0,0,0,0);
                 const diff = Math.round((due - today) / 86400000);
-                const label = diff === 0 ? 'vence hoje' : diff === 1 ? 'vence amanhã' : `vence em ${diff} dias`;
+                const label = diff === 0
+                    ? '<span class="deadline-hoje">vence HOJE</span>'
+                    : diff === 1 ? 'vence amanhã'
+                    : `vence em ${diff} dias`;
                 const li = document.createElement('li');
-                li.textContent = `${g.title} — ${label}`;
+                li.innerHTML = `<span class="deadline-title">${g.title}</span> — ${label}`;
                 list.appendChild(li);
             });
-            banner.style.display = 'block';
+            banner.style.display = 'flex';
+
+            // Vibração leve no mobile ao aparecer banner urgente
+            const temHoje = urgent.some(g => {
+                const due = new Date(g.date); due.setHours(0,0,0,0);
+                return due.getTime() === today.getTime();
+            });
+            if (temHoje && navigator.vibrate) navigator.vibrate([80, 40, 80]);
         }
 
         // ── Progresso acumulado (histórico) ────────────────────────────────
@@ -792,6 +828,7 @@
         function renderGoalsCards(goalsWithIndex) {
             const cardsContainer = document.getElementById('goalsCards');
             cardsContainer.innerHTML = '';
+            showGoalsEmpty(goalsWithIndex.length === 0);
             goalsWithIndex.forEach((item, filteredIndex) => {
                 const status   = getStatus(item);
                 const subtasks = item.subtasks || [];
@@ -910,7 +947,16 @@
             const historic = getHistoricTotal();
 
             document.getElementById('progress-text').textContent = `Metas concluídas: ${checked} de ${total}`;
-            document.getElementById('progress-bar').value = percentage;
+            // Anima a barra de progresso
+            const bar = document.getElementById('progress-bar');
+            bar.style.transition = 'none';
+            bar.value = 0;
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    bar.style.transition = 'value 0.8s ease';
+                    bar.value = percentage;
+                });
+            });
             document.getElementById('progress-historic').textContent =
                 historic > checked ? `Total histórico acumulado: ${historic} metas concluídas (mesmo após exclusões)` : '';
 
@@ -1049,8 +1095,63 @@
             }
             if (weeklyChart)  weeklyChart.destroy();
             if (monthlyChart) monthlyChart.destroy();
-            weeklyChart = new Chart(document.getElementById('weeklyChart'), { type: 'line', data: { labels: weekLabels, datasets: [{ label: 'Concluídas', data: weekCount, borderColor: '#ff00ff', backgroundColor: 'rgba(187,134,252,0.2)', tension: 0.3, fill: true }] }, options: { responsive: true, scales: { y: { beginAtZero: true } } } });
-            monthlyChart = new Chart(document.getElementById('monthlyChart'), { type: 'bar', data: { labels: monthLabels, datasets: [{ label: 'Concluídas', data: monthCount, backgroundColor: '#03dac6' }] }, options: { responsive: true, scales: { y: { beginAtZero: true } } } });
+
+            const isMobile = window.innerWidth <= 768;
+            const chartDefaults = {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        labels: { color: '#b0b0b0', font: { size: isMobile ? 10 : 12 }, boxWidth: 12 }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: '#888',
+                            font: { size: isMobile ? 8 : 11 },
+                            maxRotation: isMobile ? 30 : 45,
+                            minRotation: 0,
+                            autoSkip: true,
+                            maxTicksLimit: isMobile ? 4 : 6
+                        },
+                        grid: { color: 'rgba(255,255,255,0.05)' }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#888',
+                            font: { size: isMobile ? 9 : 11 },
+                            stepSize: 1
+                        },
+                        grid: { color: 'rgba(255,255,255,0.07)' }
+                    }
+                }
+            };
+
+            // Labels curtos: só dd/mm da data inicial de cada semana
+            const weekLabelsCurtos = weekLabels.map(l => {
+                const d = new Date(l.split(' - ')[0]);
+                return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+            });
+
+            weeklyChart = new Chart(document.getElementById('weeklyChart'), {
+                type: 'line',
+                data: {
+                    labels: weekLabelsCurtos,
+                    datasets: [{ label: 'Concluídas', data: weekCount, borderColor: '#ff00ff', backgroundColor: 'rgba(187,134,252,0.15)', tension: 0.3, fill: true, pointRadius: 4, pointBackgroundColor: '#ff00ff' }]
+                },
+                options: chartDefaults
+            });
+
+            monthlyChart = new Chart(document.getElementById('monthlyChart'), {
+                type: 'bar',
+                data: {
+                    labels: monthLabels,
+                    datasets: [{ label: 'Concluídas', data: monthCount, backgroundColor: '#03dac6', borderRadius: 4 }]
+                },
+                options: chartDefaults
+            });
         }
 
         // ── Pomodoro ────────────────────────────────────────────────────────
@@ -1151,6 +1252,17 @@
             localStorage.setItem('streakData', JSON.stringify({ current: stats.streak, lastDate: new Date().toISOString() }));
             const el = document.getElementById('emotional-message');
             if (el) { el.textContent = message; el.className = `emotional-message emotional-${state}`; }
+            // Streak badge no header
+            const badge = document.getElementById('streak-badge');
+            if (badge) {
+                if (stats.streak >= 1) {
+                    badge.textContent = `🔥 ${stats.streak}`;
+                    badge.style.display = 'inline-flex';
+                    badge.title = `Sequência de ${stats.streak} dia${stats.streak > 1 ? 's' : ''}`;
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
         }
 
         // ── Autenticação ────────────────────────────────────────────────────
@@ -1179,8 +1291,48 @@
         }
 
         // ── Inicialização ───────────────────────────────────────────────────
+        // ── Calendário colapsável ──────────────────────────────────────────
+        function initColapsaveis() {
+            const toggleCal = document.getElementById('toggleCalendarBtn');
+            const calWrapper = document.getElementById('calendarBody-wrapper');
+            if (toggleCal && calWrapper) {
+                toggleCal.addEventListener('click', () => {
+                    const collapsed = calWrapper.classList.toggle('collapsed');
+                    toggleCal.textContent = collapsed ? '▼' : '▲';
+                    toggleCal.setAttribute('aria-label', collapsed ? 'Expandir calendário' : 'Recolher calendário');
+                });
+            }
+
+            // Filtros colapsáveis
+            const toggleFiltros = document.getElementById('toggleFiltrosBtn');
+            const filtrosWrapper = document.getElementById('filtros-wrapper');
+            if (toggleFiltros && filtrosWrapper) {
+                // começa fechado no mobile
+                if (window.innerWidth <= 768) {
+                    filtrosWrapper.classList.add('collapsed');
+                    document.getElementById('filtrosArrow').textContent = '▶';
+                }
+                toggleFiltros.addEventListener('click', () => {
+                    const collapsed = filtrosWrapper.classList.toggle('collapsed');
+                    document.getElementById('filtrosArrow').textContent = collapsed ? '▶' : '▼';
+                });
+            }
+        }
+
+        // ── Loading de metas ───────────────────────────────────────────────
+        function showGoalsLoading(show) {
+            const el = document.getElementById('goals-loading');
+            if (el) el.style.display = show ? 'flex' : 'none';
+        }
+
+        function showGoalsEmpty(show) {
+            const el = document.getElementById('goals-empty');
+            if (el) el.style.display = show ? 'flex' : 'none';
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             initAuth();
+            initColapsaveis();
             setupCalendarControls();
             renderCalendar();
             renderGoals();
@@ -1201,6 +1353,56 @@
                 document.getElementById('cards-view').classList.add('active');
                 document.getElementById('list-view').classList.remove('active');
             });
+
+            // Validação em tempo real no título
+            const tituloInput = document.getElementById('titulo-meta');
+            if (tituloInput) {
+                tituloInput.addEventListener('input', () => {
+                    const val = tituloInput.value.trim();
+                    const goals = JSON.parse(localStorage.getItem('goals')) || [];
+                    const existe = goals.some(g => g.title.toLowerCase() === val.toLowerCase());
+                    let hint = document.getElementById('titulo-hint');
+                    if (!hint) {
+                        hint = document.createElement('span');
+                        hint.id = 'titulo-hint';
+                        hint.className = 'input-hint';
+                        tituloInput.parentNode.appendChild(hint);
+                    }
+                    if (existe) {
+                        hint.textContent = '⚠️ Já existe uma meta com esse nome';
+                        hint.className = 'input-hint hint-warn';
+                        tituloInput.style.borderColor = '#ffb74d';
+                    } else if (val.length > 0 && val.length < 3) {
+                        hint.textContent = 'Título muito curto';
+                        hint.className = 'input-hint hint-warn';
+                        tituloInput.style.borderColor = '#ffb74d';
+                    } else if (val.length >= 3) {
+                        hint.textContent = '✓ Título válido';
+                        hint.className = 'input-hint hint-ok';
+                        tituloInput.style.borderColor = '#4caf50';
+                    } else {
+                        hint.textContent = '';
+                        tituloInput.style.borderColor = '';
+                    }
+                });
+            }
+
+            // Feedback háptico nos botões importantes
+            document.addEventListener('click', (e) => {
+                const btn = e.target.closest('button, .start-btn, .delete-btn, .export-btn, .view-toggle button');
+                if (btn && navigator.vibrate) navigator.vibrate(30);
+            });
+
+            // Fade-in das seções ao rolar
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('section-visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.08 });
+            document.querySelectorAll('.animate-section').forEach(s => observer.observe(s));
 
             // Filtros automáticos
             document.getElementById('filter-status').addEventListener('change', renderGoals);
