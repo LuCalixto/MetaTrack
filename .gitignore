@@ -8,9 +8,6 @@ Thumbs.db
 # node_modules (caso use npm futuramente)
 node_modules/
 
-# Firebase config com chaves reais
-config.js
-
 # Vercel
 .vercel
 .env

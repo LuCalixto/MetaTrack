@@ -6,10 +6,20 @@
     <meta name="description" content="MetaTrack — Crie sua conta e comece a gerenciar suas metas hoje.">
     <title>Cadastro - Meta Track</title>
     <link rel="icon" type="image/png" href="/main/minimalista.png">
-    <script src="config.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey:            "AIzaSyDt_5U_ld8iDppsi9QFImrI4eBP61IgGc0",
+            authDomain:        "ethania.firebaseapp.com",
+            projectId:         "ethania",
+            storageBucket:     "ethania.firebasestorage.app",
+            messagingSenderId: "290971711529",
+            appId:             "1:290971711529:web:655a835e54baeef36d4438",
+            measurementId:     "G-DZDTQ0B676"
+        };
+
         const app  = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         window._auth                           = auth;
@@ -107,7 +117,6 @@
         }
         .toggle-pw:hover { color: #b0b0b0; }
 
-        /* Força da senha */
         .strength-bar-wrapper {
             display: flex; gap: 3px; margin-top: 0.35rem;
         }
@@ -117,7 +126,6 @@
         }
         .strength-label { font-size: 0.7rem; margin-top: 0.2rem; transition: color 0.3s; }
 
-        /* Checklist de requisitos */
         .pw-reqs { margin-top: 0.4rem; display: flex; flex-direction: column; gap: 0.15rem; }
         .pw-req  { font-size: 0.7rem; color: #555; display: flex; align-items: center; gap: 0.3rem; transition: color 0.2s; }
         .pw-req.ok { color: #4caf50; }
@@ -243,7 +251,7 @@
             setTimeout(() => t.classList.remove('show'), 2500);
         }
 
-        const pwInput = document.getElementById('register-password');
+        const pwInput      = document.getElementById('register-password');
         const confirmInput = document.getElementById('register-confirm');
 
         const levels = [
@@ -267,13 +275,11 @@
             if (num)     score++;
             if (special) score++;
 
-            // Requisitos
             document.getElementById('req-len').classList.toggle('ok', len);
             document.getElementById('req-upper').classList.toggle('ok', upper);
             document.getElementById('req-num').classList.toggle('ok', num);
             document.getElementById('req-special').classList.toggle('ok', special);
 
-            // Barras
             const lvl = v.length === 0 ? -1 : score - 1;
             for (let i = 1; i <= 4; i++) {
                 const bar = document.getElementById(`sb${i}`);
@@ -284,12 +290,11 @@
             lbl.textContent = `Força: ${levels[lvl].label}`;
             lbl.style.color = levels[lvl].color;
 
-            // Verificar confirmação se já preenchida
             if (confirmInput.value) checkConfirm();
         });
 
         function checkConfirm() {
-            const hint = document.getElementById('confirm-hint');
+            const hint  = document.getElementById('confirm-hint');
             const match = pwInput.value === confirmInput.value;
             hint.textContent = confirmInput.value ? (match ? '✓ Senhas coincidem' : '✗ Senhas não coincidem') : '';
             hint.style.color = match ? '#4caf50' : '#ff5252';
@@ -304,8 +309,8 @@
             const confirm = confirmInput.value;
             const btn     = document.getElementById('register-btn');
 
-            if (pw.length < 8)    { showToast('A senha precisa ter ao menos 8 caracteres.', 'error'); return; }
-            if (pw !== confirm)    { showToast('As senhas não coincidem.', 'error'); return; }
+            if (pw.length < 8) { showToast('A senha precisa ter ao menos 8 caracteres.', 'error'); return; }
+            if (pw !== confirm) { showToast('As senhas não coincidem.', 'error'); return; }
 
             btn.disabled = true; btn.textContent = 'Criando conta...';
             try {
